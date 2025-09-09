@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{% endblock %} | Easy Access</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-100 min-h-screen flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="w-full mx-auto flex items-center justify-between py-4 px-6 bg-teal-600 shadow-md">
+    <div class="logo">
+      <a class="text-white font-bold text-xl" href="/">Easy Access</a>
+    </div>
+
+    <div class="search">
+      <form method="get" action="{% url 'search' %}" class="flex items-center">
+        <input
+          type="search"
+          name="query"
+          placeholder="Search"
+          class="rounded-l-md px-3 py-1 focus:outline-none"
+        />
+        <button
+          type="submit"
+          class="bg-teal-700 text-white px-3 py-1 rounded-r-md hover:bg-teal-800 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-5 h-5"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            />
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="menu flex space-x-4 text-white items-center">
+      <a href="#" class="hover:underline">About</a>
+      {% if request.user.is_authenticated %}
+      {% if request.user.userprofile.is_vendor %}
+      <a href="{% url 'mystore' %}" class="py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">My Store</a>
+      {% endif %}
+      <a href=" {% url 'cart_view' %} "class=" flex py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition"> <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+</svg>
+ ({{cart|length  }})</a>
+      <a href="{% url 'myaccount' %}" class="py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">My Account</a>
+      <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+      {% else %}
+      <a href="{% url 'login' %}" class="hover:underline">Login</a>
+      <a href="{% url 'signup' %}" class="hover:underline">Sign up</a>
+
+      {% endif %}
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl mx-auto px-6 py-8 w-full">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+</body>
+</html>
