@@ -3,26 +3,162 @@
 {% block title %}Welcome{% endblock %}
 
 {% block content %}
-<!-- Gradient Background -->
 <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100">
     <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-semibold mb-6 text-gray-800">Our Products</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {% for product in products %}
-                <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                    <a href="{% url 'product_detail' product.id %}">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" alt="Image of {{ product.title }}" class="w-full h-48 object-cover">
-                        {% endif %}
-                        <div class="p-4">
-                            <h2 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h2>
-                            <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
-                        </div>
+        
+
+        <!-- Carousel -->
+        {% if carousel_images %}
+        <div class="relative w-full overflow-hidden mb-10">
+            <div id="carousel" class="flex transition-transform duration-700 ease-in-out">
+                {% for slide in carousel_images %}
+                <div class="carousel-item min-w-full flex-shrink-0">
+                    <a href="{{ slide.link|default:'#' }}">
+                        <img src="{{ slide.image.url }}" alt="{{ slide.title }}" class="w-full h-64 sm:h-80 object-cover rounded-lg shadow">
                     </a>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+
+            <!-- Carousel buttons -->
+            <button id="prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow">&#10094;</button>
+            <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow">&#10095;</button>
         </div>
+
+        <!-- Become a Vendor Button -->
+        {% if user.is_authenticated %}
+            {% if not user.is_vendor %}
+                <div class="mb-6 text-center">
+                    <a href="{% url 'become_vendor' %}" 
+                       class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-6 rounded-lg shadow">
+                        Become a Vendor
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <script>
+            const carousel = document.getElementById('carousel');
+            const prev = document.getElementById('prev');
+            const next = document.getElementById('next');
+            let index = 0;
+
+            function showSlide(i) {
+                const slides = document.querySelectorAll('.carousel-item');
+                if (i >= slides.length) index = 0;
+                if (i < 0) index = slides.length - 1;
+                carousel.style.transform = `translateX(-${index * 100}%)`;
+            }
+
+            next.addEventListener('click', () => { index++; showSlide(index); });
+            prev.addEventListener('click', () => { index--; showSlide(index); });
+
+            // Auto slide every 5 seconds
+            setInterval(() => { index++; showSlide(index); }, 5000);
+        </script>
+        {% endif %}
+
+        <!-- Recommended Products -->
+        {% if recommended_products %}
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Recommended for You</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                {% for product in recommended_products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Latest Products -->
+        {% if latest_products %}
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Latest Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                {% for product in latest_products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Sponsored Products -->
+        {% if sponsored_products %}
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Sponsored Products</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                {% for product in sponsored_products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Top Selling Products -->
+        {% if top_selling_products %}
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Top Selling</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                {% for product in top_selling_products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Trending Products -->
+        {% if trending_products %}
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Trending</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                {% for product in trending_products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}

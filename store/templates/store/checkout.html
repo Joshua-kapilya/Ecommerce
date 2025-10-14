@@ -6,7 +6,7 @@
 
 <h2 class=" text-xl text-gray-500 " > Total cost: {{ cart.get_total_cost }} </h2>
 
-<form method="post" action="." >
+<form method="post" action="{% url 'checkout' %}" >
 	{% csrf_token %}
 
 

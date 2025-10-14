@@ -5,51 +5,206 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto p-6">
-    <!-- Product title -->
-    <h1 class="text-3xl font-semibold text-gray-800 mb-4">
-        {{ product.title }}
-    </h1>
+<div class="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+    <!-- Product header -->
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Image -->
+        {% if product.image %}
+        <div class="md:w-1/2">
+            <img 
+                src="{{ product.image.url }}" 
+                alt="{{ product.title }}" 
+                class="rounded-xl shadow w-full object-cover"
+            >
+        </div>
+        {% else %}
+        <div class="md:w-1/2 bg-gray-100 flex items-center justify-center rounded-xl h-64">
+            <p class="text-gray-400">No Image Available</p>
+        </div>
+        {% endif %}
 
-    <!-- Image -->
-    {% if product.image %}
-    <div class="mb-6">
-        <img 
-            src="{{ product.image.url }}" 
-            alt="Image of {{ product.title }}" 
-            class="rounded-xl shadow-md w-full object-cover"
-        >
+        <!-- Product details -->
+        <div class="md:w-1/2 space-y-4">
+            <h1 class="text-3xl font-semibold text-gray-800">
+                {{ product.title }}
+            </h1>
+
+            <p class="text-lg text-teal-600 font-bold">
+                K{{ product.get_display_price }}
+            </p>
+
+            <!-- Vendor -->
+            <p class="text-sm text-gray-500 flex items-center gap-1">
+                Vendor: 
+                <a 
+                  href="{% url 'vendor_detail' product.user.id %}" 
+                  class="font-medium text-gray-700 hover:text-teal-600 transition flex items-center gap-1"
+                >
+                    {{ product.user.username }}
+                    {% if product.user.userprofile.is_verified %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                        </svg>
+                    {% endif %}
+                </a>
+            </p>
+
+            <!-- Category -->
+            <p class="text-sm text-gray-500">
+                Category: <span class="font-medium text-gray-700">{{ product.category.title }}</span>
+            </p>
+
+            <!-- Quantity and stock -->
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-gray-600">Available Quantity:</span>
+                <span class="text-gray-800">{{ product.quantity }}</span>
+
+                {% if product.quantity > 10 %}
+                    <span class="ml-3 text-green-600 text-sm font-medium">In Stock</span>
+                {% elif product.quantity > 0 %}
+                    <span class="ml-3 text-yellow-600 text-sm font-medium">Limited Stock</span>
+                {% else %}
+                    <span class="ml-3 text-red-600 text-sm font-medium">Out of Stock</span>
+                {% endif %}
+            </div>
+
+            <!-- Stats -->
+            <div class="text-sm text-gray-500 mt-2">
+                <p>Sold: <span class="font-medium text-gray-700">{{ product.sold_count }}</span></p>
+                <p>Views: <span class="font-medium text-gray-700">{{ product.views_count }}</span></p>
+                <p>Added on: <span class="font-medium text-gray-700">{{ product.created_at|date:"F j, Y" }}</span></p>
+            </div>
+
+            <!-- Description -->
+            {% if product.description %}
+            <div class="mt-4 text-gray-700 leading-relaxed">
+                {{ product.description }}
+            </div>
+            {% endif %}
+
+            <!-- Add to cart -->
+            <div class="mt-6">
+                {% if product.quantity > 0 %}
+                <a 
+                  href="{% url 'add_to_cart' product.id %}" 
+                  class="inline-block px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow transition"
+                >
+                    Add to Basket
+                </a>
+                {% else %}
+                <button 
+                  disabled 
+                  class="inline-block px-6 py-3 bg-gray-300 text-white font-semibold rounded-lg shadow cursor-not-allowed"
+                >
+                    Out of Stock
+                </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    {% endif %}
 
-    <!-- Price -->
-    <p class="text-lg font-medium text-teal-600 mb-2">
-        K{{ product.get_display_price }}
-    </p>
-
-    <!-- Vendor -->
-    <a 
-      href="{% url 'vendor_dtail' product.user.id %}" 
-      class="text-sm text-gray-500 hover:text-gray-700 transition"
-    >
-        Created by <span class="font-semibold">{{ product.user.username }}</span>
-    </a>
-
-    <!-- Description -->
-    {% if product.description %}
-    <div class="mt-6 text-gray-700 leading-relaxed">
-        {{ product.description }}
+    <!-- Extra info -->
+    <div class="mt-10 border-t pt-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
+        <p class="text-gray-600">
+            This product is managed by 
+            <strong class="flex items-center gap-1">
+                {{ product.user.username }}
+                {% if product.user.userprofile.is_verified %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                    </svg>
+                {% endif %}
+            </strong> 
+            and listed under <strong>{{ product.category.title }}</strong>.
+        </p>
     </div>
-    {% endif %}
 
-    <!-- Add to basket button -->
-    <div class="mt-8">
-        <a 
-          href="{% url 'add_to_cart' product.id %}" 
-          class="inline-block px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow transition"
-        >
-          Add to Basket
-        </a>
+    <!-- ⭐ Reviews Section -->
+    <div class="mt-10 border-t pt-6">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Customer Reviews</h2>
+
+        <!-- Average Rating -->
+        {% if avg_rating %}
+        <div class="flex items-center mb-4">
+            <div class="flex">
+                {% for i in "12345" %}
+                    {% if i|add:"0" <= avg_rating %}
+                        <span class="text-yellow-400 text-xl">★</span>
+                    {% elif i|add:"0" <= avg_rating|add:"0.5" %}
+                        <span class="text-yellow-400 text-xl">☆</span>
+                    {% else %}
+                        <span class="text-gray-300 text-xl">★</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <p class="ml-3 text-gray-600 text-sm">
+                {{ avg_rating|floatformat:1 }}/5 average rating
+            </p>
+        </div>
+        {% else %}
+            <p class="text-gray-500 mb-4">No ratings yet.</p>
+        {% endif %}
+
+        <!-- Reviews List -->
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="border-b border-gray-200 pb-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-gray-600 font-semibold flex items-center gap-1">
+                            {{ review.user.username }}
+                            {% if review.user.userprofile.is_verified %}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-400">{{ review.created_at|date:"M j, Y" }}</p>
+                    </div>
+
+                    <!-- Star display -->
+                    <div class="flex mt-1 mb-1">
+                        {% for i in "12345" %}
+                            {% if i|add:"0" <= review.rating %}
+                                <span class="text-yellow-400 text-lg">★</span>
+                            {% else %}
+                                <span class="text-gray-300 text-lg">★</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <p class="text-gray-700">{{ review.comment }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-gray-500">No reviews yet. Be the first to review this product.</p>
+        {% endif %}
+
+        <!-- Review Form -->
+        {% if user.is_authenticated %}
+        <form method="POST" class="mt-6 bg-gray-50 p-4 rounded-lg shadow-inner">
+            {% csrf_token %}
+            <div class="flex items-center gap-4 mb-3">
+                <label class="font-semibold">Rating:</label>
+                {{ form.rating }}
+            </div>
+            <div class="mb-3">
+                {{ form.comment }}
+            </div>
+            <button 
+                type="submit" 
+                class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-semibold"
+            >
+                Submit Review
+            </button>
+        </form>
+        {% else %}
+        <p class="text-gray-600 mt-4">
+            <a href="{% url 'login' %}" class="text-teal-600 font-semibold hover:underline">
+                Log in
+            </a> to write a review.
+        </p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

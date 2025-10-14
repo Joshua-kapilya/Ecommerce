@@ -9,7 +9,12 @@ urlpatterns = [
 	path('mystore/', views.mystore, name='mystore'),
 	path('signup', views.signup, name='signup'),
 	path('login/', auth_views.LoginView.as_view(template_name='userprofile/login.html'), name='login'),
-	path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+	path('logout/', views.logout_view, name='logout'),
 	path('myaccount/', views.myaccount, name='myaccount'),
-	path('vendors/<int:pk>/', views.vendor_detail, name='vendor_dtail')
+	path('vendors/<int:pk>/', views.vendor_detail, name='vendor_detail'),
+	path('become_vendor', views.become_vendor, name='become_vendor'),
+	path('order/<int:order_id>/', views.order_detail, name='order_detail'),
+	path('confirm-received/<int:item_id>/', views.confirm_received, name='confirm_received'),
+	path('edit-profile/', views.edit_profile, name='edit_profile'),
+
 ]

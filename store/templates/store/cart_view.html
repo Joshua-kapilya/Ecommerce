@@ -1,43 +1,71 @@
 {% extends 'core/base.html' %}
-{% block title %} vendor {% endblock %}
+{% block title %}Cart{% endblock %}
+
 {% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Your Cart</h1>
 
-<h1 class='text-2xl mb-6'> Cart </h1>
-{% if cart|length %}
-{% for item in cart %}
-	<div class='px-4 py-4 mb-4 bg-teal-100 flex items-center'>
+    {% if cart|length %}
+        <div class="space-y-4">
+        {% for item in cart %}
+            <div class="flex flex-col sm:flex-row items-center bg-white shadow rounded-lg p-4 space-y-4 sm:space-y-0 sm:space-x-6">
+                
+                <!-- Product Image -->
+                <div class="flex-shrink-0">
+                    <img src="{{ item.product.get_thumbnail }}" alt="{{ item.product.title }}" class="w-24 h-24 object-cover rounded-md">
+                </div>
 
-		<div class=" px-4 ">
-			<img src=" {{ item.product.get_thumbnail }} "  class=" w-20 ">
-		</div>
+                <!-- Product Info -->
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-gray-800">{{ item.product.title }}</h2>
+                    <p class="text-gray-600 mt-1">K{{ item.product.get_display_price }}</p>
 
-		<div class=" mb-3">
+                    <!-- Quantity Controls -->
+                    <div class="mt-2 flex items-center space-x-2">
+                        <a href="{% url 'change_quantity' item.product.id %}?action=decrease" 
+                           class="px-3 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition">-</a>
+                        <span class="px-3 py-1 border rounded-lg">{{ item.quantity }}</span>
+                        <a href="{% url 'change_quantity' item.product.id %}?action=increase" 
+                           class="px-3 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition">+</a>
+                    </div>
+                </div>
 
-		<h2> {{ item.product.title }}</h2> <br>
-		<p class=" text-sm text-grey " > K{{ item.product.get_display_price }} </p> <br>
-		<a href=" {% url 'change_quantity' item.product.id %}?action=increase"  class=" p-2 rounded-xl bg-teal-500 text-white "> +</a>
-		{{ item.quantity }}
-		<a href=" {% url 'change_quantity' item.product.id %}?action=decrease"  class=" p-2 rounded-xl bg-teal-500 text-white mb-3 ">-</a> <br>
+                <!-- Remove Button -->
+                <div>
+                    <a href="{% url 'remove_from_cart' item.product.id %}" 
+                       class="text-red-500 hover:text-red-700 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" 
+                                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673
+                                     a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0
+                                     a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165
+                                     m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201
+                                     a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916
+                                     m7.5 0a48.667 48.667 0 00-7.5 0"/>
+                        </svg>
+                    </a>
+                </div>
 
-	</div>
+            </div>
+        {% endfor %}
+        </div>
 
-		<a href=" {% url 'remove_from_cart' item.product.id %} "><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-</svg>
-</a>
-	</div>
+        <!-- Cart Summary -->
+        <div class="mt-6 flex flex-col sm:flex-row justify-between items-center bg-white p-4 shadow rounded-lg">
+            <div class="text-lg font-semibold text-gray-800">
+                Total: K{{ cart.get_total_cost }}
+            </div>
+            <a href="{% url 'checkout' %}" 
+               class="mt-4 sm:mt-0 inline-block bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-6 rounded-lg shadow transition">
+               Proceed to Checkout
+            </a>
+        </div>
 
-{% endfor %}
-
-<hr class=" mt-4 mb-4 ">
-
-<strong> Total: </strong>{{ cart.get_total_cost }} <br>
-
-<a href=" {% url 'checkout'  %} " class=" bg-teal-500" > Checkout</a>
-{% else %}
-<div class=" px-6 py-6 bg-grey-300 ">
-	You do not have any product in  the cart yet
+    {% else %}
+        <div class="px-6 py-6 bg-gray-200 rounded-lg text-center text-gray-700">
+            You do not have any products in your cart yet.
+        </div>
+    {% endif %}
 </div>
-{% endif %}
-
 {% endblock %}

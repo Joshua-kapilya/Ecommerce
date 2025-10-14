@@ -1,18 +1,62 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Products
+from .models import Products, Order, OrderItem, Review
 from django.db.models import Q
 from django.shortcuts import redirect
+from .forms import ReviewForm
+from django.db import models
+
 
 from .cart import Cart
-from .forms import OrderForm
-# Create your views here.
+from .forms import OrderForm, StoreForm
+
+from userprofile.models import Userprofile  # if you still use Userprofile
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import StoreForm
+
+from django.contrib import messages
+
+# store/views.py
+def vendor_success(request):
+    return render(request, "store/vendor_success.html")
+
+
+
+
 
 def product_detail(request, product_id):
-	product = Products.objects.get(id=product_id)
-	cart = Cart(request)
-	print(cart.get_total_cost())
-	return render(request, 'store/product_detail.html', {'product':product})
+    product = get_object_or_404(Products, id=product_id)
+
+    # increment views
+    product.views_count += 1
+    product.save(update_fields=['views_count'])
+
+    cart = Cart(request)
+    form = ReviewForm()
+    reviews = product.reviews.all()
+    avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
+
+    # handle review submission
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.user = request.user
+            review.save()
+            return redirect('product_detail', product_id=product.id)
+
+    return render(request, 'store/product_detail.html', {
+        'product': product,
+        'cart': cart,
+        'form': form,
+        'reviews': reviews,
+        'avg_rating': avg_rating,
+    })
+
 
 
 def add_to_cart(request, product_id):
@@ -61,42 +105,52 @@ def remove_from_cart(request, product_id):
 
 	return redirect('cart_view')
 
+
 @login_required
 def checkout(request):
-	if request.method == 'POST':
-		form = OrderForm(request)
-		if form.is_valid():
-			total_price = 0
+    cart = Cart(request)  # ✅ Define cart at the start
 
-			for item in cart:
-				product = item ['product']
+    if request.method == 'POST':
+        form = OrderForm(request.POST)  # ✅ Pass request.POST, not just request
+        if form.is_valid():
+            total_price = 0
 
-				total_price += product.price * int(item['quantity'])
+            # Calculate total price
+            for item in cart:
+                product = item['product']
+                total_price += product.price * int(item['quantity'])
 
-			order = form.save()
-			order.created_by = request.user
-			order.paid_amount = total_price
-			order.save()
+            # Create order
+            order = form.save(commit=False)
+            order.created_by = request.user
+            order.paid_amount = total_price
+            order.save()
 
-			for item in cart:
-				product = item['product']
-				quantity = int(item['quantity'])
-				price = product.price * quantity
+            # Create order items
+            for item in cart:
+                product = item['product']
+                quantity = int(item['quantity'])
+                price = product.price * quantity
 
-				item = OrderItem.objects.create(order=order, product=product, price=price, quantity=quantity)
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    price=price,
+                    quantity=quantity
+                )
 
-			cart.clear()
+            # Clear cart after successful checkout
+            cart.clear()
 
+            return redirect('myaccount')
+    else:
+        form = OrderForm()
 
+    return render(request, 'store/checkout.html', {
+        'cart': cart,
+        'form': form
+    })
 
-
-			return redirect('myaccount')
-
-	else:
-		form = OrderForm()
-	cart = Cart(request)
-	
-	return render(request, 'store/checkout.html', { 'cart':cart, 'form': form } )
 
 
 def search (request):

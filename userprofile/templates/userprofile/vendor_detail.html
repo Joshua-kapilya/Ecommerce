@@ -1,28 +1,78 @@
 {% extends 'core/base.html' %}
-{% block title %} vendor {% endblock %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
 {% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4">
 
-<h1 class='text-2xl'> {% firstof user.username %} </h1>
-<div class="flex flex-wrap">
+        <!-- Vendor Header -->
+        <div class="flex flex-col md:flex-row items-center md:items-start bg-white shadow rounded-lg p-6 mb-8">
+            
+            <!-- Avatar -->
+            <div class="w-32 h-32 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+                {% if user.userprofile.avatar %}
+                    <img src="{{ user.userprofile.avatar.url }}" alt="{{ user.username }}" class="w-full h-full object-cover rounded-full border-2 border-teal-600">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-xl font-semibold">
+                        {{ user.username|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
 
-	{% for product in products %}
-		<div class="product w-1/3 p-2">
-			<div class=" p-4 bg-gray-200">
-				<a href="{% url 'product_detail' product.id%} ">
-					{% if product.image %}
+            <!-- Info -->
+            <div class="flex-1">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    {{ user.username }}
+                    {% if user.userprofile.is_verified %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                        </svg>
+                    {% endif %}
+                </h1>
 
-					<div class='image mb-2'>
-						<img src="{{ product.image.url }}" alt="Image of {{product.title">
-						
-					</div>
+                {% if user.userprofile.bio %}
+                    <p class="text-gray-600 mb-2">{{ user.userprofile.bio }}</p>
+                {% endif %}
 
-					{% endif %}
-					<h2 class="text-xl">{{ product.title }}</h2>
-					<p class="text-xs text-gray-600">K{{ product.get_display_price }}</p>
-				</a>
+                <div class="text-gray-500 text-sm">
+                    {% if user.userprofile.province %}Province: {{ user.userprofile.province }}{% endif %}
+                    {% if user.userprofile.city %} | City: {{ user.userprofile.city }}{% endif %}
+                </div>
+            </div>
+        </div>
 
-			</div>
-		</div>
-	{% endfor %}		
+        <!-- Products Grid -->
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Products by {{ user.username }}</h2>
+        {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for product in products %}
+                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                        <a href="{% url 'product_detail' product.id %}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 flex items-center gap-1">
+                                    {{ product.title }}
+                                    {% if user.userprofile.is_verified %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                                        </svg>
+                                    {% endif %}
+                                </h3>
+                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white p-6 text-center text-gray-500 rounded shadow">
+                This vendor has no active products yet.
+            </div>
+        {% endif %}
+
+    </div>
 </div>
 {% endblock %}

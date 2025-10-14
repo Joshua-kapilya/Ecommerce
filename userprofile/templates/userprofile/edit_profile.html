@@ -1,0 +1,71 @@
+{% extends 'core/base.html' %}
+
+{% block title %}
+Edit Profile - {{ user.username }}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-8">
+
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Edit Profile</h1>
+
+    <div class="bg-white shadow rounded-lg p-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+
+            <!-- Avatar -->
+            <div>
+                <label class="block text-gray-700 font-semibold mb-2">Avatar</label>
+                {% if user.userprofile.avatar %}
+                    <img src="{{ user.userprofile.avatar.url }}" alt="{{ user.username }}" class="w-32 h-32 object-cover rounded-full mb-2 border-2 border-teal-600">
+                {% endif %}
+                {{ form.avatar }}
+            </div>
+
+            <!-- Bio -->
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Bio</label>
+        <textarea name="bio" class="w-full border rounded p-2" rows="4">{{ user.userprofile.bio }}</textarea>
+    </div>
+
+    <!-- Province -->
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Province</label>
+        <select name="province" class="w-full border rounded p-2">
+            <option value="">Select province</option>
+            {% for code, name in form.province.field.choices %}
+                <option value="{{ code }}" {% if code == user.userprofile.province %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- City -->
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">City</label>
+        <input type="text" name="city" value="{{ user.userprofile.city }}" class="w-full border rounded p-2">
+    </div>
+
+    <!-- Mobile -->
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Mobile Number</label>
+        <input type="text" name="mobile_number" value="{{ user.userprofile.mobile_number }}" class="w-full border rounded p-2">
+    </div>
+
+
+            <!-- Vendor Toggle (optional) -->
+            <div class="flex items-center gap-2">
+                {{ form.is_vendor }}
+                <label class="text-gray-700 font-semibold">I am a vendor</label>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4">
+                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded-lg font-semibold shadow transition">
+                    Save Changes
+                </button>
+                <a href="{% url 'mystore' %}" class="ml-4 text-gray-600 hover:underline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
