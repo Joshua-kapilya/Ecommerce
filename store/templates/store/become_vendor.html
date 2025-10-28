@@ -3,28 +3,44 @@
 {% block title %}Become a Vendor{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-lg mt-10">
-    <h1 class="text-3xl font-bold mb-6 text-center text-teal-700">Become a Vendor</h1>
-    <p class="text-gray-600 mb-8 text-center">Fill in your store details to start selling on our platform.</p>
+<div class="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg mt-6 sm:mt-10 w-full">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-teal-700">
+        Become a Vendor
+    </h1>
+    <p class="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base text-center">
+        Fill in your store details to start selling on our platform.
+    </p>
 
-    <form method="post" enctype="multipart/form-data" class="space-y-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-5 sm:space-y-6">
         {% csrf_token %}
         
         {% for field in form %}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">{{ field.label }}</label>
-                {{ field }}
+            <div class="w-full">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ field.label }}
+                </label>
+
+                <div class="w-full">
+                    {{ field }}
+                </div>
+
                 {% if field.help_text %}
-                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        {{ field.help_text }}
+                    </p>
                 {% endif %}
+
                 {% for error in field.errors %}
-                    <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+                    <p class="text-xs text-red-500 mt-1">
+                        {{ error }}
+                    </p>
                 {% endfor %}
             </div>
         {% endfor %}
 
         <button type="submit" 
-            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-6 rounded-lg shadow-md transition">
+            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 rounded-lg
+                   shadow-md transition duration-200">
             Submit Application
         </button>
     </form>

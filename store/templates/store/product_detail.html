@@ -5,206 +5,165 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+<div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-xl shadow-md mt-4 sm:mt-8 w-full">
+
     <!-- Product header -->
     <div class="flex flex-col md:flex-row gap-6">
+        
         <!-- Image -->
         {% if product.image %}
-        <div class="md:w-1/2">
+        <div class="md:w-1/2 w-full">
             <img 
                 src="{{ product.image.url }}" 
                 alt="{{ product.title }}" 
-                class="rounded-xl shadow w-full object-cover"
+                class="rounded-xl shadow w-full max-h-80 object-cover"
             >
         </div>
         {% else %}
-        <div class="md:w-1/2 bg-gray-100 flex items-center justify-center rounded-xl h-64">
+        <div class="md:w-1/2 w-full bg-gray-100 flex items-center justify-center rounded-xl h-64">
             <p class="text-gray-400">No Image Available</p>
         </div>
         {% endif %}
 
         <!-- Product details -->
-        <div class="md:w-1/2 space-y-4">
-            <h1 class="text-3xl font-semibold text-gray-800">
+        <div class="md:w-1/2 w-full space-y-4">
+            <h1 class="text-2xl sm:text-3xl font-semibold text-gray-800">
                 {{ product.title }}
             </h1>
 
-            <p class="text-lg text-teal-600 font-bold">
+            <p class="text-xl sm:text-2xl text-teal-600 font-bold">
                 K{{ product.get_display_price }}
             </p>
 
             <!-- Vendor -->
-            <p class="text-sm text-gray-500 flex items-center gap-1">
-                Vendor: 
-                <a 
-                  href="{% url 'vendor_detail' product.user.id %}" 
-                  class="font-medium text-gray-700 hover:text-teal-600 transition flex items-center gap-1"
-                >
+            <p class="text-sm sm:text-base text-gray-500 flex items-center flex-wrap gap-1">
+                Vendor:
+                <a href="{% url 'vendor_detail' product.user.id %}"
+                   class="font-medium text-gray-700 hover:text-teal-600 transition flex items-center gap-1">
                     {{ product.user.username }}
                     {% if product.user.userprofile.is_verified %}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
-                        </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 2a8 8..."/>
+                    </svg>
                     {% endif %}
                 </a>
             </p>
 
             <!-- Category -->
-            <p class="text-sm text-gray-500">
+            <p class="text-sm sm:text-base text-gray-500">
                 Category: <span class="font-medium text-gray-700">{{ product.category.title }}</span>
             </p>
 
-            <!-- Quantity and stock -->
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-semibold text-gray-600">Available Quantity:</span>
-                <span class="text-gray-800">{{ product.quantity }}</span>
+            <!-- Stock -->
+            <div class="flex flex-wrap items-center gap-2 text-sm sm:text-base">
+                <span class="font-semibold text-gray-600">Available:</span>
+                <span class="font-semibold text-gray-800">{{ product.quantity }}</span>
 
                 {% if product.quantity > 10 %}
-                    <span class="ml-3 text-green-600 text-sm font-medium">In Stock</span>
+                    <span class="text-green-600 font-medium">In Stock</span>
                 {% elif product.quantity > 0 %}
-                    <span class="ml-3 text-yellow-600 text-sm font-medium">Limited Stock</span>
+                    <span class="text-yellow-600 font-medium">Limited</span>
                 {% else %}
-                    <span class="ml-3 text-red-600 text-sm font-medium">Out of Stock</span>
+                    <span class="text-red-600 font-medium">Out of Stock</span>
                 {% endif %}
             </div>
 
             <!-- Stats -->
-            <div class="text-sm text-gray-500 mt-2">
+            <div class="text-xs sm:text-sm text-gray-500 mt-1 space-y-1">
                 <p>Sold: <span class="font-medium text-gray-700">{{ product.sold_count }}</span></p>
                 <p>Views: <span class="font-medium text-gray-700">{{ product.views_count }}</span></p>
-                <p>Added on: <span class="font-medium text-gray-700">{{ product.created_at|date:"F j, Y" }}</span></p>
+                <p>Added: <span class="font-medium text-gray-700">{{ product.created_at|date:"F j, Y" }}</span></p>
             </div>
 
             <!-- Description -->
             {% if product.description %}
-            <div class="mt-4 text-gray-700 leading-relaxed">
+            <p class="text-gray-700 text-sm sm:text-base">
                 {{ product.description }}
-            </div>
+            </p>
             {% endif %}
 
             <!-- Add to cart -->
-            <div class="mt-6">
+            <div class="pt-2">
                 {% if product.quantity > 0 %}
-                <a 
-                  href="{% url 'add_to_cart' product.id %}" 
-                  class="inline-block px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow transition"
-                >
+                <a href="{% url 'add_to_cart' product.id %}"
+                   class="block w-full text-center md:w-auto px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow transition">
                     Add to Basket
                 </a>
                 {% else %}
-                <button 
-                  disabled 
-                  class="inline-block px-6 py-3 bg-gray-300 text-white font-semibold rounded-lg shadow cursor-not-allowed"
-                >
+                <button disabled
+                        class="block w-full text-center md:w-auto px-6 py-3 bg-gray-300 text-white font-semibold rounded-lg shadow cursor-not-allowed">
                     Out of Stock
                 </button>
                 {% endif %}
             </div>
+
         </div>
     </div>
 
-    <!-- Extra info -->
+    <!-- Reviews Section -->
     <div class="mt-10 border-t pt-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Additional Information</h2>
-        <p class="text-gray-600">
-            This product is managed by 
-            <strong class="flex items-center gap-1">
-                {{ product.user.username }}
-                {% if product.user.userprofile.is_verified %}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
-                    </svg>
-                {% endif %}
-            </strong> 
-            and listed under <strong>{{ product.category.title }}</strong>.
-        </p>
-    </div>
+        <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Customer Reviews</h2>
 
-    <!-- ⭐ Reviews Section -->
-    <div class="mt-10 border-t pt-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Customer Reviews</h2>
-
-        <!-- Average Rating -->
+        <!-- Rating -->
         {% if avg_rating %}
-        <div class="flex items-center mb-4">
-            <div class="flex">
-                {% for i in "12345" %}
-                    {% if i|add:"0" <= avg_rating %}
-                        <span class="text-yellow-400 text-xl">★</span>
-                    {% elif i|add:"0" <= avg_rating|add:"0.5" %}
-                        <span class="text-yellow-400 text-xl">☆</span>
-                    {% else %}
-                        <span class="text-gray-300 text-xl">★</span>
-                    {% endif %}
-                {% endfor %}
+            <div class="flex items-center mb-4">
+                <div class="flex text-xl sm:text-2xl">
+                    {% for i in "12345" %}
+                        <span class="{% if i|add:'0' <= avg_rating %}text-yellow-400{% else %}text-gray-300{% endif %}">★</span>
+                    {% endfor %}
+                </div>
+                <p class="ml-3 text-gray-600 text-xs sm:text-sm">
+                    {{ avg_rating|floatformat:1 }}/5
+                </p>
             </div>
-            <p class="ml-3 text-gray-600 text-sm">
-                {{ avg_rating|floatformat:1 }}/5 average rating
-            </p>
-        </div>
         {% else %}
             <p class="text-gray-500 mb-4">No ratings yet.</p>
         {% endif %}
 
-        <!-- Reviews List -->
-        {% if reviews %}
-            {% for review in reviews %}
-                <div class="border-b border-gray-200 pb-4 mb-4">
-                    <div class="flex items-center justify-between">
-                        <p class="text-sm text-gray-600 font-semibold flex items-center gap-1">
-                            {{ review.user.username }}
-                            {% if review.user.userprofile.is_verified %}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
-                                </svg>
-                            {% endif %}
-                        </p>
-                        <p class="text-xs text-gray-400">{{ review.created_at|date:"M j, Y" }}</p>
-                    </div>
-
-                    <!-- Star display -->
-                    <div class="flex mt-1 mb-1">
-                        {% for i in "12345" %}
-                            {% if i|add:"0" <= review.rating %}
-                                <span class="text-yellow-400 text-lg">★</span>
-                            {% else %}
-                                <span class="text-gray-300 text-lg">★</span>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    <p class="text-gray-700">{{ review.comment }}</p>
+        <!-- Review List -->
+        <div class="space-y-4">
+        {% for review in reviews %}
+            <div class="pb-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <p class="text-sm font-semibold text-gray-700">{{ review.user.username }}</p>
+                    <p class="text-xs text-gray-400">{{ review.created_at|date:"M j, Y" }}</p>
                 </div>
-            {% endfor %}
-        {% else %}
-            <p class="text-gray-500">No reviews yet. Be the first to review this product.</p>
-        {% endif %}
+                <div class="flex text-lg mt-1">
+                    {% for i in "12345" %}
+                        <span class="{% if i|add:'0' <= review.rating %}text-yellow-400{% else %}text-gray-300{% endif %}">★</span>
+                    {% endfor %}
+                </div>
+                <p class="text-gray-700 text-sm sm:text-base">{{ review.comment }}</p>
+            </div>
+        {% empty %}
+            <p class="text-gray-500">No reviews yet.</p>
+        {% endfor %}
+        </div>
 
         <!-- Review Form -->
         {% if user.is_authenticated %}
-        <form method="POST" class="mt-6 bg-gray-50 p-4 rounded-lg shadow-inner">
+        <form method="POST" class="mt-6 bg-gray-50 p-4 rounded-lg shadow-inner space-y-3">
             {% csrf_token %}
-            <div class="flex items-center gap-4 mb-3">
-                <label class="font-semibold">Rating:</label>
+            <div class="flex flex-wrap items-center gap-4">
+                <label class="font-semibold text-sm sm:text-base">Rating:</label>
                 {{ form.rating }}
             </div>
-            <div class="mb-3">
+            <div>
                 {{ form.comment }}
             </div>
-            <button 
-                type="submit" 
-                class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-semibold"
-            >
+            <button class="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-semibold">
                 Submit Review
             </button>
         </form>
         {% else %}
-        <p class="text-gray-600 mt-4">
+        <p class="text-gray-600 mt-4 text-sm">
             <a href="{% url 'login' %}" class="text-teal-600 font-semibold hover:underline">
                 Log in
-            </a> to write a review.
+            </a>
+            to write a review.
         </p>
         {% endif %}
+
     </div>
 </div>
 {% endblock %}

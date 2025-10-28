@@ -3,26 +3,26 @@
 {% block title %}{{ user.username }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="container mx-auto px-4">
+<div class="min-h-screen bg-gray-50 py-6">
+    <div class="container mx-auto px-3 sm:px-6">
 
         <!-- Vendor Header -->
-        <div class="flex flex-col md:flex-row items-center md:items-start bg-white shadow rounded-lg p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-center md:items-start bg-white shadow rounded-lg p-5 sm:p-6 mb-8">
             
             <!-- Avatar -->
-            <div class="w-32 h-32 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
+            <div class="w-28 h-28 sm:w-32 sm:h-32 mb-4 md:mb-0 md:mr-6 flex-shrink-0">
                 {% if user.userprofile.avatar %}
                     <img src="{{ user.userprofile.avatar.url }}" alt="{{ user.username }}" class="w-full h-full object-cover rounded-full border-2 border-teal-600">
                 {% else %}
-                    <div class="w-full h-full flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-xl font-semibold">
+                    <div class="w-full h-full flex items-center justify-center bg-gray-200 rounded-full text-gray-500 text-2xl font-semibold">
                         {{ user.username|slice:":1" }}
                     </div>
                 {% endif %}
             </div>
 
             <!-- Info -->
-            <div class="flex-1">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+            <div class="flex-1 text-center md:text-left">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center md:justify-start gap-2">
                     {{ user.username }}
                     {% if user.userprofile.is_verified %}
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -32,36 +32,42 @@
                 </h1>
 
                 {% if user.userprofile.bio %}
-                    <p class="text-gray-600 mb-2">{{ user.userprofile.bio }}</p>
+                    <p class="text-gray-600 mb-3 px-1">{{ user.userprofile.bio }}</p>
                 {% endif %}
 
-                <div class="text-gray-500 text-sm">
-                    {% if user.userprofile.province %}Province: {{ user.userprofile.province }}{% endif %}
-                    {% if user.userprofile.city %} | City: {{ user.userprofile.city }}{% endif %}
+                <div class="text-gray-500 text-sm flex flex-wrap justify-center md:justify-start gap-1">
+                    {% if user.userprofile.province %}
+                        <span>Province: {{ user.userprofile.province }}</span>
+                    {% endif %}
+                    {% if user.userprofile.city %}
+                        <span>| City: {{ user.userprofile.city }}</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
         <!-- Products Grid -->
-        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Products by {{ user.username }}</h2>
+        <h2 class="text-xl sm:text-2xl font-semibold mb-5 text-gray-800">Products by {{ user.username }}</h2>
+
         {% if products %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 {% for product in products %}
                     <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
+                                <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-36 sm:h-48 object-cover">
                             {% endif %}
-                            <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1 flex items-center gap-1">
+
+                            <div class="p-3 sm:p-4">
+                                <h3 class="text-sm sm:text-lg font-semibold text-gray-800 mb-1 flex items-center gap-1">
                                     {{ product.title }}
                                     {% if user.userprofile.is_verified %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
                                         </svg>
                                     {% endif %}
                                 </h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <p class="text-xs sm:text-sm text-gray-600">K{{ product.get_display_price }}</p>
                             </div>
                         </a>
                     </div>
@@ -72,7 +78,6 @@
                 This vendor has no active products yet.
             </div>
         {% endif %}
-
     </div>
 </div>
 {% endblock %}

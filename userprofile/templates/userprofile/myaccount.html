@@ -3,87 +3,90 @@
 {% block title %}My Account{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto p-6">
+<div class="max-w-5xl mx-auto p-4 sm:p-6">
     <h1 class="text-2xl font-bold mb-6">My Orders</h1>
 
     {% if orders %}
         {% for order in orders %}
             <div class="mb-6 bg-white shadow-lg rounded-lg p-4">
                 <!-- Order Header -->
-                <div class="flex justify-between items-center mb-3">
+                <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
                     <h2 class="font-semibold text-lg">Order #{{ order.id }}</h2>
                     <span class="text-gray-500 text-sm">{{ order.created_at|date:"M d, Y H:i" }}</span>
                 </div>
 
-                <!-- Grid Header -->
-                <div class="grid grid-cols-6 gap-4 font-semibold bg-gray-100 p-2 rounded-t">
-                    <div>Product</div>
-                    <div>Image</div>
-                    <div>Quantity</div>
-                    <div>Subtotal</div>
-                    <div>Status</div>
-                    <div>Received</div>
+                <!-- Responsive Scroll Container -->
+                <div class="overflow-x-auto">
+                    <!-- Grid Header -->
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-4 font-semibold bg-gray-100 p-2 rounded-t text-sm">
+                        <div>Product</div>
+                        <div>Image</div>
+                        <div class="hidden sm:block text-center">Quantity</div>
+                        <div class="hidden sm:block">Subtotal</div>
+                        <div>Status</div>
+                        <div class="text-center">Received</div>
+                    </div>
+
+                    <!-- Order Items -->
+                    {% for item in order.items.all %}
+                        <div class="grid grid-cols-2 sm:grid-cols-6 gap-4 p-2 border-b items-center text-sm">
+                            <!-- Product Name -->
+                            <div class="break-words">{{ item.product.title }}</div>
+
+                            <!-- Product Image -->
+                            <div>
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="w-16 h-16 object-cover rounded">
+                                {% else %}
+                                    <div class="w-16 h-16 bg-gray-200 flex items-center justify-center rounded text-gray-500 text-xs">
+                                        No Image
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Quantity -->
+                            <div class="hidden sm:block text-center">{{ item.quantity }}</div>
+
+                            <!-- Subtotal -->
+                            <div class="hidden sm:block text-green-700 font-semibold">K{{ item.subtotal }}</div>
+
+                            <!-- Status -->
+                            <div>
+                                {% if item.status == 'pending' %}
+                                    <span class="text-yellow-600 font-semibold">Pending</span>
+                                {% elif item.status == 'accepted' %}
+                                    <span class="text-blue-600 font-semibold">Accepted</span>
+                                {% elif item.status == 'shipped' %}
+                                    <span class="text-purple-600 font-semibold">Shipped</span>
+                                {% elif item.status == 'delivered' %}
+                                    <span class="text-green-600 font-semibold">Delivered</span>
+                                {% elif item.status == 'cancelled' %}
+                                    <span class="text-red-600 font-semibold">Cancelled</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Received -->
+                            <div class="text-center">
+                                {% if item.status == 'delivered' and not item.received %}
+                                    <form method="post" action="{% url 'confirm_received' item.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="px-2 py-1 bg-green-600 text-white rounded text-xs sm:text-sm">
+                                            Confirm
+                                        </button>
+                                    </form>
+                                {% elif item.received %}
+                                    <span class="text-green-700 font-semibold">✅</span>
+                                {% else %}
+                                    <span class="text-gray-500 text-xs">Not delivered</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
 
-                <!-- Order Items -->
-                {% for item in order.items.all %}
-                    <div class="grid grid-cols-6 gap-4 p-2 border-b items-center">
-                        <!-- Product Name -->
-                        <div>{{ item.product.title }}</div>
-
-                        <!-- Product Image -->
-                        <div>
-                            {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="w-16 h-16 object-cover rounded">
-                            {% else %}
-                                <div class="w-16 h-16 bg-gray-200 flex items-center justify-center rounded text-gray-500 text-sm">
-                                    No Image
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Quantity -->
-                        <div class="text-center">{{ item.quantity }}</div>
-
-                        <!-- Subtotal (calculated in view) -->
-                        <div class="text-green-700 font-semibold">K{{ item.subtotal }}</div>
-
-                        <!-- Status (color-coded) -->
-                        <div>
-                            {% if item.status == 'pending' %}
-                                <span class="text-yellow-600 font-semibold">Pending</span>
-                            {% elif item.status == 'accepted' %}
-                                <span class="text-blue-600 font-semibold">Accepted</span>
-                            {% elif item.status == 'shipped' %}
-                                <span class="text-purple-600 font-semibold">Shipped</span>
-                            {% elif item.status == 'delivered' %}
-                                <span class="text-green-600 font-semibold">Delivered</span>
-                            {% elif item.status == 'cancelled' %}
-                                <span class="text-red-600 font-semibold">Cancelled</span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Received / Confirm Button -->
-                        <div>
-                            {% if item.status == 'delivered' and not item.received %}
-                                <form method="post" action="{% url 'confirm_received' item.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="px-2 py-1 bg-green-600 text-white rounded text-sm">
-                                        Confirm Received
-                                    </button>
-                                </form>
-                            {% elif item.received %}
-                                <span class="text-green-700 font-semibold">Received ✅</span>
-                            {% else %}
-                                <span class="text-gray-500">Not yet delivered</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-
-                <!-- Order Total -->
-                <div class="text-right font-bold mt-3">
-                    Total: <span class="text-green-700">K{{ order.total_price }}</span>
+                <!-- Total -->
+                <div class="text-right font-bold mt-3 text-green-700">
+                    K{{ order.total_price }}
                 </div>
             </div>
         {% endfor %}

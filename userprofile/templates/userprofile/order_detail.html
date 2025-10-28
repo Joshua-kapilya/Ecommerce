@@ -5,89 +5,111 @@ Order #{{ order.id }} - {{ order.created_by.username }}
 {% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-6">
+<div class="max-w-5xl mx-auto bg-white shadow-lg rounded-lg p-4 sm:p-6">
+
     <!-- Order Header -->
     <h1 class="text-2xl font-bold mb-4">Order #{{ order.id }}</h1>
 
     <!-- Customer Info -->
-    <p class="mb-2 flex items-center gap-2">
-        <strong>Customer:</strong> 
-        <span class="font-medium text-gray-800 flex items-center gap-1">
-            {{ order.created_by.username }}
-            {% if order.created_by.userprofile.is_verified %}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
-                </svg>
-            {% endif %}
-        </span>
-    </p>
+    <div class="mb-4 space-y-1 text-sm sm:text-base">
+        <p class="flex items-center gap-2">
+            <strong>Customer:</strong>
+            <span class="font-medium text-gray-800 flex items-center gap-1">
+                {{ order.created_by.username }}
+                {% if order.created_by.userprofile.is_verified %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 2a8 8 0 106.32 12.906l2.387 1.43a1 1 0 001.48-.874V8a1 1 0 00-.447-.832l-3.06-1.837A7.966 7.966 0 0010 2zM9 11l-3-3 1.414-1.414L9 8.172l3.586-3.586L14 6l-5 5z" clip-rule="evenodd"/>
+                    </svg>
+                {% endif %}
+            </span>
+        </p>
+        <p><strong>Email:</strong> {{ order.created_by.email }}</p>
+    </div>
 
-    <p class="mb-2"><strong>Email:</strong> {{ order.created_by.email }}</p>
 
     <h2 class="text-xl font-semibold mb-3">Items</h2>
 
-    <!-- Grid Header -->
-    <div class="grid grid-cols-6 gap-4 font-semibold bg-gray-100 p-3 rounded-t">
-        <div>Product</div>
-        <div>Details</div>
-        <div>Quantity</div>
-        <div>Subtotal</div>
-        <div>Status</div>
-        <div>Customer Received</div>
-    </div>
+    <!-- Table wrapper for horizontal scroll if needed -->
+    <div class="overflow-x-auto">
 
-    <!-- Order Items -->
-    {% for item in order_items %}
-        <div class="grid grid-cols-6 gap-4 p-3 border-b items-center">
+        <!-- Grid Header -->
+        <div class="hidden sm:grid grid-cols-6 gap-4 font-semibold bg-gray-100 p-3 rounded-t">
+            <div>Product</div>
+            <div>Details</div>
+            <div>Quantity</div>
+            <div>Subtotal</div>
+            <div>Status</div>
+            <div>Customer Received</div>
+        </div>
+
+        <!-- Order Items -->
+        {% for item in order_items %}
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 p-3 border-b items-center text-sm sm:text-base">
+
             <!-- Product Image -->
-            <div>
+            <div class="flex justify-center sm:block">
                 {% if item.product.image %}
-                    <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="w-16 h-16 object-cover rounded">
+                    <img src="{{ item.product.image.url }}"
+                         alt="{{ item.product.title }}"
+                         class="w-20 h-20 sm:w-16 sm:h-16 object-cover rounded">
                 {% else %}
-                    <div class="w-16 h-16 bg-gray-200 flex items-center justify-center rounded text-gray-500 text-sm">
-                        No Image
+                    <div class="w-20 h-20 flex items-center justify-center bg-gray-200 rounded text-gray-500">
+                        No Img
                     </div>
                 {% endif %}
             </div>
 
-            <!-- Product Title + Price -->
+            <!-- Title + Price -->
             <div>
-                <p class="font-medium">{{ item.product.title }}</p>
+                <p class="font-medium break-words">{{ item.product.title }}</p>
                 <p class="text-sm text-gray-500">K{{ item.product.price }}</p>
             </div>
 
             <!-- Quantity -->
-            <div class="text-center">{{ item.quantity }}</div>
+            <div class="text-center font-semibold sm:font-normal">
+                {{ item.quantity }}
+            </div>
 
             <!-- Subtotal -->
-            <div class="font-semibold text-green-700">K{{ item.subtotal }}</div>
+            <div class="text-green-700 font-semibold sm:text-base">
+                K{{ item.subtotal }}
+            </div>
 
-            <!-- Status Form -->
+            <!-- Status update form -->
             <div>
-                <form method="post" class="flex space-x-2 items-center">
+                <form method="post" class="flex flex-wrap gap-2 items-center justify-center sm:justify-start">
                     {% csrf_token %}
                     <input type="hidden" name="item_id" value="{{ item.id }}">
                     {{ item.form.status }}
-                    <button type="submit" class="px-2 py-1 bg-blue-600 text-white rounded text-sm">Update</button>
+                    <button type="submit"
+                        class="px-2 py-1 bg-blue-600 text-white rounded text-xs sm:text-sm">
+                        Update
+                    </button>
                 </form>
             </div>
 
-            <!-- Customer Received -->
-            <div class="text-center">
+            <!-- Customer received status -->
+            <div class="text-center font-semibold">
                 {% if item.received %}
-                    <span class="text-green-700 font-semibold">Received ✅</span>
+                    <span class="text-green-600">✅ Received</span>
                 {% else %}
-                    <span class="text-gray-500 font-semibold">Pending</span>
+                    <span class="text-gray-500">Pending</span>
                 {% endif %}
             </div>
+
         </div>
-    {% empty %}
-        <p class="text-gray-500 p-3">No items in this order.</p>
-    {% endfor %}
+        {% empty %}
+            <p class="text-gray-500 p-3">No items in this order.</p>
+        {% endfor %}
+    </div>
 
     <!-- Total Price -->
     <div class="mt-6 text-right">
-        <p class="text-lg font-bold">Total: <span class="text-green-700">K{{ total_price }}</span></p>
+        <p class="text-lg font-bold">
+            Total:
+            <span class="text-green-700">K{{ total_price }}</span>
+        </p>
     </div>
+
 </div>
 {% endblock %}
