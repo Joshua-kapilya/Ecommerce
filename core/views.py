@@ -1,21 +1,35 @@
-from core.redis_client import redis_client
-from django.shortcuts import render
+from core.models import CarouselImage
 from store.models import Products
-from core.models import CarouselImage  # Import carousel model
+from django.db.models import F
+from django.db.models.functions import Sqrt, Power
+from django.shortcuts import render
+
 
 def frontpage(request):
-    # Products
-    latest_products = Products.objects.filter(status=Products.ACTIVE).order_by('-created_at')[:6]
-    sponsored_products = Products.objects.filter(status=Products.ACTIVE, is_sponsored=True)[:6]
-    top_selling_products = Products.objects.filter(status=Products.ACTIVE).order_by('-sold_count')[:6]
-    trending_products = Products.objects.filter(status=Products.ACTIVE).order_by('-views_count')[:6]
+    # Base query for active products
+    base_products = Products.objects.filter(status=Products.ACTIVE)
 
-    # Recommended products
+    # Function to annotate distance if user has location
+    def annotate_distance(queryset, user):
+        if user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.latitude:
+            user_lat = user.userprofile.latitude
+            user_lon = user.userprofile.longitude
+            queryset = queryset.annotate(
+                distance=Sqrt(
+                    Power(F('latitude') - user_lat, 2) +
+                    Power(F('longitude') - user_lon, 2)
+                )
+            ).order_by('distance')
+        return queryset
+
+    # Apply distance sorting to each product category
+    latest_products = annotate_distance(base_products, request.user).order_by('-created_at')[:6]
+    sponsored_products = annotate_distance(base_products.filter(is_sponsored=True), request.user)[:6]
+    top_selling_products = annotate_distance(base_products, request.user).order_by('-sold_count')[:6]
+    trending_products = annotate_distance(base_products, request.user).order_by('-views_count')[:6]
+
+    # Recommended products placeholder (empty for now)
     recommended_products = []
-    if request.user.is_authenticated:
-        product_ids = redis_client.lrange(f"user:{request.user.id}:recommendations", 0, 9)
-        if product_ids:
-            recommended_products = Products.objects.filter(id__in=product_ids)
 
     # Carousel images
     carousel_images = CarouselImage.objects.all()
@@ -25,8 +39,8 @@ def frontpage(request):
         'sponsored_products': sponsored_products,
         'top_selling_products': top_selling_products,
         'trending_products': trending_products,
-        'recommended_products': recommended_products,
-        'carousel_images': carousel_images,  # Added carousel to context
+        'recommended_products': recommended_products,  # empty for now
+        'carousel_images': carousel_images,
     }
 
     return render(request, 'core/frontpage.html', context)

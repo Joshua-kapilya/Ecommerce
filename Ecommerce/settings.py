@@ -139,3 +139,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+GOOGLE_MAPS_API_KEY = "ad5a3c779a4e2cc8ccf4dbc6376a7543d126b7a1389cd448d5870edb8eb2470c"

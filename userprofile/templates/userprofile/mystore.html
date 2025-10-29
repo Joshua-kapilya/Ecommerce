@@ -56,34 +56,44 @@ My Store - {{ user.username }}
     </div>
 
 
-    <!-- Orders Section -->
-    <h2 class="text-2xl font-bold mb-4">My Orders</h2>
+<!-- Orders Section -->
+<h2 class="text-2xl font-bold mb-4">Orders Underway</h2>
 
-    <div class="hidden sm:flex bg-gray-100 p-3 rounded-t font-semibold text-gray-700">
-        <div class="w-1/3">Customer</div>
-        <div class="w-1/3">Total Items</div>
-        <div class="w-1/3">Total Price</div>
-    </div>
+<div class="hidden sm:flex bg-gray-100 p-3 rounded-t font-semibold text-gray-700">
+    <div class="w-1/3">Customer</div>
+    <div class="w-1/3">Total Items</div>
+    <div class="w-1/3">Total Price</div>
+</div>
 
-    {% for order_data in orders_summary %}
-    <div class="border rounded-lg shadow hover:shadow-md transition duration-200 mb-4 bg-white">
-        <a href="{% url 'order_detail' order_id=order_data.order.id %}">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 gap-2 text-sm">
-                <div class="w-full sm:w-1/3">
-                    <strong>Customer:</strong> {{ order_data.customer.username }}
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <strong>Total Items:</strong> {{ order_data.total_items }}
-                </div>
-                <div class="w-full sm:w-1/3">
-                    <strong>Total Price:</strong> K{{ order_data.total_price }}
-                </div>
+{% for order_data in underway_orders %}
+<div class="border rounded-lg shadow hover:shadow-md transition duration-200 mb-4 bg-white">
+    <a href="{% url 'order_detail' order_id=order_data.order.id %}">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 gap-2 text-sm">
+            <div class="w-full sm:w-1/3">
+                <strong>Customer:</strong> {{ order_data.customer.username }}
             </div>
-        </a>
-    </div>
-    {% empty %}
-        <p class="text-gray-500">No orders yet.</p>
-    {% endfor %}
+            <div class="w-full sm:w-1/3">
+                <strong>Total Items:</strong> {{ order_data.total_items }}
+            </div>
+            <div class="w-full sm:w-1/3">
+                <strong>Total Price:</strong> K{{ order_data.total_price }}
+            </div>
+        </div>
+    </a>
+</div>
+{% empty %}
+    <p class="text-gray-500">No orders underway.</p>
+{% endfor %}
+
+<hr class="my-6 border-gray-300">
+
+<!-- Button to view completed orders -->
+<div class="text-center my-6">
+    <a href="{% url 'completed_orders' %}" 
+       class="inline-block px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg shadow transition">
+        View Completed Orders
+    </a>
+</div>
 
 
     <hr class="my-6 border-gray-300">

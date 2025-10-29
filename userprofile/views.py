@@ -113,33 +113,53 @@ def myaccount(request):
 
 
 from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from store.models import OrderItem, Products
 
 @login_required
 def mystore(request):
+    # Products for this vendor
     products = request.user.products.exclude(status=Products.DELETED)
     
-    order_items = OrderItem.objects.filter(product__user=request.user).select_related('order', 'order__created_by', 'product')
+    # All order items for this vendor
+    order_items = OrderItem.objects.filter(
+        product__user=request.user
+    ).select_related('order', 'order__created_by', 'product')
 
-    # Group items by order and calculate total price
-    orders_summary = []
+    # Group items by order
     orders_dict = defaultdict(list)
-
     for item in order_items:
         orders_dict[item.order].append(item)
 
+    underway_orders = []
+    history_orders = []
+
+    # Build summaries
     for order, items in orders_dict.items():
         total_price = sum([item.get_total_price() for item in items])
-        orders_summary.append({
+        order_summary = {
             'order': order,
             'items': items,
             'total_items': len(items),
-            'total_price': total_price
-        })
+            'total_price': total_price,
+            'customer': order.created_by,
+            'completed': all(item.status == OrderItem.STATUS_DELIVERED and item.received for item in items)
+        }
 
-    return render(request, 'userprofile/mystore.html', {
+        # Split orders
+        if order_summary['completed']:
+            history_orders.append(order_summary)
+        else:
+            underway_orders.append(order_summary)
+
+    context = {
         'products': products,
-        'orders_summary': orders_summary
-    })
+        'underway_orders': underway_orders,
+        'history_orders': history_orders,
+    }
+
+    return render(request, 'userprofile/mystore.html', context)
+
 
 from .forms import UserProfileForm
 
@@ -236,4 +256,39 @@ def logout_view(request):
     logout(request)  # Clears the session
     return redirect('frontpage')  # Redirect to homepage
 
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from collections import defaultdict
+from store.models import OrderItem, Products
+
+@login_required
+def completed_orders(request):
+    # Fetch order items where the product belongs to this user and item is received
+    order_items = OrderItem.objects.filter(
+        product__user=request.user,
+        status=OrderItem.STATUS_DELIVERED,
+        received=True
+    ).select_related('order', 'order__created_by', 'product')
+
+    # Group items by order and calculate total price
+    orders_summary = []
+    orders_dict = defaultdict(list)
+
+    for item in order_items:
+        orders_dict[item.order].append(item)
+
+    for order, items in orders_dict.items():
+        total_price = sum([item.get_total_price() for item in items])
+        orders_summary.append({
+            'order': order,
+            'items': items,
+            'total_items': len(items),
+            'total_price': total_price,
+            'customer': order.created_by
+        })
+
+    return render(request, 'userprofile/completed_orders.html', {
+        'orders_summary': orders_summary
+    })
 

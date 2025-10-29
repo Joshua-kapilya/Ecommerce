@@ -153,11 +153,31 @@ def checkout(request):
 
 
 
-def search (request):
-	query = request.GET.get('query', '')
-	products = Products.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
+from django.db.models import Q, F
+from django.db.models.functions import Sqrt, Power
 
-	return render(request, 'store/search.html',  {'products': products, 'query':query})
+def search(request):
+    query = request.GET.get('query', '')
+    products = Products.objects.filter(
+        Q(title__icontains=query) | Q(description__icontains=query),
+        status=Products.ACTIVE
+    )
+
+    # Annotate distance if user has a location
+    user = request.user
+    if user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.latitude:
+        user_lat = user.userprofile.latitude
+        user_lon = user.userprofile.longitude
+
+        products = products.annotate(
+            distance=Sqrt(
+                Power(F('latitude') - user_lat, 2) +
+                Power(F('longitude') - user_lon, 2)
+            )
+        ).order_by('distance')  # Closest products first
+
+    return render(request, 'store/search.html', {'products': products, 'query': query})
+
 
 
 
