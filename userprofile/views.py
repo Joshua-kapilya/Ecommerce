@@ -143,7 +143,12 @@ def mystore(request):
             'total_items': len(items),
             'total_price': total_price,
             'customer': order.created_by,
-            'completed': all(item.status == OrderItem.STATUS_DELIVERED and item.received for item in items)
+            'completed': all(
+                (item.status == OrderItem.STATUS_DELIVERED and item.received is True)
+                for item in items
+            )
+
+
         }
 
         # Split orders
