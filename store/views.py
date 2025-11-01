@@ -27,10 +27,12 @@ def vendor_success(request):
 
 
 
+from django.db import IntegrityError
+
 def product_detail(request, product_id):
     product = get_object_or_404(Products, id=product_id)
 
-    # increment views
+    # Increment product views
     product.views_count += 1
     product.save(update_fields=['views_count'])
 
@@ -39,14 +41,24 @@ def product_detail(request, product_id):
     reviews = product.reviews.all()
     avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
 
-    # handle review submission
+    # Handle review submission
     if request.method == 'POST':
         form = ReviewForm(request.POST)
         if form.is_valid():
-            review = form.save(commit=False)
-            review.product = product
-            review.user = request.user
-            review.save()
+            try:
+                review = form.save(commit=False)
+                review.product = product
+                review.user = request.user
+                review.save()
+                messages.success(request, "Your review has been submitted successfully.")
+            except IntegrityError:
+                # If user already reviewed, update instead of crashing
+                existing_review = product.reviews.filter(user=request.user).first()
+                if existing_review:
+                    existing_review.rating = form.cleaned_data.get('rating')
+                    existing_review.comment = form.cleaned_data.get('comment')
+                    existing_review.save()
+                    messages.info(request, "Your review has been updated.")
             return redirect('product_detail', product_id=product.id)
 
     return render(request, 'store/product_detail.html', {
