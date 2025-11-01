@@ -28,6 +28,14 @@ def frontpage(request):
     top_selling_products = annotate_distance(base_products, request.user).order_by('-sold_count')[:6]
     trending_products = annotate_distance(base_products, request.user).order_by('-views_count')[:6]
 
+    # Annotate each queryset with average rating from reviews
+    from django.db.models import Avg
+    latest_products = latest_products.annotate(rating=Avg('reviews__rating'))
+    sponsored_products = sponsored_products.annotate(rating=Avg('reviews__rating'))
+    top_selling_products = top_selling_products.annotate(rating=Avg('reviews__rating'))
+    trending_products = trending_products.annotate(rating=Avg('reviews__rating'))
+    # recommended_products is empty for now, no annotation needed
+
     # Recommended products placeholder (empty for now)
     recommended_products = []
 

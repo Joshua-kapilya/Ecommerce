@@ -6,8 +6,6 @@
 <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100">
     <div class="container mx-auto px-4 py-8">
 
-        
-
         <!-- Carousel -->
         {% if carousel_images %}
         <div class="relative w-full overflow-hidden mb-10">
@@ -26,16 +24,13 @@
             <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow">&#10095;</button>
         </div>
 
-        <!-- Become a Vendor Button -->
-        {% if user.is_authenticated %}
-            {% if not user.is_vendor %}
-                <div class="mb-6 text-center">
-                    <a href="{% url 'become_vendor' %}" 
-                       class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-6 rounded-lg shadow">
-                        Become a Vendor
-                    </a>
-                </div>
-            {% endif %}
+        {% if user.is_authenticated and not user.is_vendor %}
+        <div class="mb-6 text-center">
+            <a href="{% url 'become_vendor' %}" 
+               class="inline-block bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-6 rounded-lg shadow">
+                Become a Vendor
+            </a>
+        </div>
         {% endif %}
 
         <script>
@@ -54,7 +49,6 @@
             next.addEventListener('click', () => { index++; showSlide(index); });
             prev.addEventListener('click', () => { index--; showSlide(index); });
 
-            // Auto slide every 5 seconds
             setInterval(() => { index++; showSlide(index); }, 5000);
         </script>
         {% endif %}
@@ -64,14 +58,34 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Recommended for You</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                 {% for product in recommended_products %}
-                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
                             {% endif %}
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ product.title }}</h3>
+                                {% if product.category %}
+                                    <p class="text-xs text-teal-600 font-medium mb-1 uppercase">{{ product.category }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2">
+                                    {% if product.rating %}
+                                        {% for i in "12345"|slice:":5" %}
+                                            {% if forloop.counter <= product.rating %}
+                                                <span class="text-yellow-400 text-sm">&#9733;</span>
+                                            {% else %}
+                                                <span class="text-gray-300 text-sm">&#9733;</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.rating }}/5)</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2">
+                                    {{ product.description|truncatewords:10 }}
+                                </p>
                             </div>
                         </a>
                     </div>
@@ -84,14 +98,34 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Latest Products</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                 {% for product in latest_products %}
-                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
                             {% endif %}
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ product.title }}</h3>
+                                {% if product.category %}
+                                    <p class="text-xs text-teal-600 font-medium mb-1 uppercase">{{ product.category }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2">
+                                    {% if product.rating %}
+                                        {% for i in "12345"|slice:":5" %}
+                                            {% if forloop.counter <= product.rating %}
+                                                <span class="text-yellow-400 text-sm">&#9733;</span>
+                                            {% else %}
+                                                <span class="text-gray-300 text-sm">&#9733;</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.rating }}/5)</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2">
+                                    {{ product.description|truncatewords:10 }}
+                                </p>
                             </div>
                         </a>
                     </div>
@@ -104,14 +138,34 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Sponsored Products</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                 {% for product in sponsored_products %}
-                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
                             {% endif %}
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ product.title }}</h3>
+                                {% if product.category %}
+                                    <p class="text-xs text-teal-600 font-medium mb-1 uppercase">{{ product.category }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2">
+                                    {% if product.rating %}
+                                        {% for i in "12345"|slice:":5" %}
+                                            {% if forloop.counter <= product.rating %}
+                                                <span class="text-yellow-400 text-sm">&#9733;</span>
+                                            {% else %}
+                                                <span class="text-gray-300 text-sm">&#9733;</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.rating }}/5)</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2">
+                                    {{ product.description|truncatewords:10 }}
+                                </p>
                             </div>
                         </a>
                     </div>
@@ -124,14 +178,34 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Top Selling</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                 {% for product in top_selling_products %}
-                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
                             {% endif %}
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ product.title }}</h3>
+                                {% if product.category %}
+                                    <p class="text-xs text-teal-600 font-medium mb-1 uppercase">{{ product.category }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2">
+                                    {% if product.rating %}
+                                        {% for i in "12345"|slice:":5" %}
+                                            {% if forloop.counter <= product.rating %}
+                                                <span class="text-yellow-400 text-sm">&#9733;</span>
+                                            {% else %}
+                                                <span class="text-gray-300 text-sm">&#9733;</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.rating }}/5)</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2">
+                                    {{ product.description|truncatewords:10 }}
+                                </p>
                             </div>
                         </a>
                     </div>
@@ -144,14 +218,34 @@
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Trending</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                 {% for product in trending_products %}
-                    <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                    <div class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
                         <a href="{% url 'product_detail' product.id %}">
                             {% if product.image %}
                                 <img src="{{ product.image.url }}" alt="{{ product.title }}" class="w-full h-48 object-cover">
                             {% endif %}
                             <div class="p-4">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-1">{{ product.title }}</h3>
-                                <p class="text-sm text-gray-600">K{{ product.get_display_price }}</p>
+                                <h3 class="text-lg font-semibold text-gray-800 mb-1 truncate">{{ product.title }}</h3>
+                                {% if product.category %}
+                                    <p class="text-xs text-teal-600 font-medium mb-1 uppercase">{{ product.category }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2">
+                                    {% if product.rating %}
+                                        {% for i in "12345"|slice:":5" %}
+                                            {% if forloop.counter <= product.rating %}
+                                                <span class="text-yellow-400 text-sm">&#9733;</span>
+                                            {% else %}
+                                                <span class="text-gray-300 text-sm">&#9733;</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.rating }}/5)</span>
+                                    {% else %}
+                                        <span class="text-xs text-gray-400">No ratings yet</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2">
+                                    {{ product.description|truncatewords:10 }}
+                                </p>
                             </div>
                         </a>
                     </div>
