@@ -117,51 +117,98 @@ def remove_from_cart(request, product_id):
 
 	return redirect('cart_view')
 
+from django.conf import settings
+import requests
 
 @login_required
 def checkout(request):
-    cart = Cart(request)  # ✅ Define cart at the start
+    cart = Cart(request)
 
-    if request.method == 'POST':
-        form = OrderForm(request.POST)  # ✅ Pass request.POST, not just request
-        if form.is_valid():
-            total_price = 0
+    # ✅ Only allow checkout if there are items
+    if len(cart) == 0:
+        return render(request, 'store/checkout.html', {
+            'cart': cart,
+            'error': 'Your cart is empty.'
+        })
 
-            # Calculate total price
-            for item in cart:
-                product = item['product']
-                total_price += product.price * int(item['quantity'])
+    total_price = 0
+    for item in cart:
+        product = item['product']
+        total_price += product.price * int(item['quantity'])
 
-            # Create order
-            order = form.save(commit=False)
-            order.created_by = request.user
-            order.paid_amount = total_price
-            order.save()
+    # ✅ Automatically create order (no form)
+    order = Order.objects.create(
+        created_by=request.user,
+        paid_amount=total_price
+    )
 
-            # Create order items
-            for item in cart:
-                product = item['product']
-                quantity = int(item['quantity'])
-                price = product.price * quantity
+    # ✅ Create order items
+    for item in cart:
+        product = item['product']
+        quantity = int(item['quantity'])
+        price = product.price * quantity
 
-                OrderItem.objects.create(
-                    order=order,
-                    product=product,
-                    price=price,
-                    quantity=quantity
-                )
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            price=price,
+            quantity=quantity
+        )
 
-            # Clear cart after successful checkout
-            cart.clear()
+    # ✅ Flutterwave Payment Payload (email optional)
+    payload = {
+        "tx_ref": f"TX-{order.id}",
+        "amount": str(total_price),
+        "currency": "ZMW",
+        "redirect_url": request.build_absolute_uri('/payment/callback/'),
+        "customer": {
+            # ✅ Use placeholder email since your users don't have one
+            "email": "noemail@easyaccess.com",
+            "name": request.user.username,
+            "phonenumber": "260977000000"  # optional static or user field
+        },
+        "payment_options": "mobilemoneyzambia",
+        "customizations": {
+            "title": "Easy Access Payment",
+            "description": f"Payment for Order #{order.id}",
+            "logo": "https://your-domain.com/static/images/logo.png"
+        }
+    }
 
-            return redirect('myaccount')
+    headers = {
+        "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.post("https://api.flutterwave.com/v3/payments", json=payload, headers=headers)
+    data = response.json()
+
+    print("FLUTTERWAVE RESPONSE:", data)
+
+    # ✅ If payment link generated successfully
+    if data.get('status') == 'success' and data['data'].get('link'):
+        cart.clear()
+        return redirect(data['data']['link'])
     else:
-        form = OrderForm()
+        return render(request, 'store/checkout.html', {
+            'cart': cart,
+            'error': 'Payment initialization failed. Please try again later.'
+        })
 
-    return render(request, 'store/checkout.html', {
-        'cart': cart,
-        'form': form
-    })
+
+@login_required
+def payment_callback(request):
+    status = request.GET.get('status')
+    tx_ref = request.GET.get('tx_ref')
+
+    if status == 'successful':
+        # You can verify payment here if needed
+        messages.success(request, "Payment successful!")
+    else:
+        messages.error(request, "Payment failed or cancelled.")
+
+    return redirect('myaccount')
+
 
 
 
