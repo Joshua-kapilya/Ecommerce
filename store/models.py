@@ -4,9 +4,34 @@ from django.core.files import File
 from io import BytesIO
 from django.utils import timezone
 
+
 from PIL import Image
 
 # Create your models here.
+
+class Store(models.Model):
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name="store")
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    image = models.ImageField(upload_to="store_images/", blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    province = models.CharField(max_length=100, blank=True, null=True)
+    town = models.CharField(max_length=100, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    category = models.CharField(max_length=100, blank=True, null=True)
+    total_earned = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    pending_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    available_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    last_payout = models.DateTimeField(blank=True, null=True)
+
+    is_approved = models.BooleanField(default=False)  # ✅ new field
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
 
 class Category(models.Model):
 	title = models.CharField(max_length=50)
@@ -154,6 +179,9 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Products, related_name='items', on_delete=models.CASCADE)
     price = models.IntegerField()
     quantity = models.IntegerField(default=1)
+    is_paid_to_vendor = models.BooleanField(default=False)
+    vendor = models.ForeignKey(Store, on_delete=models.CASCADE, null=True, blank=True)
+
 
     # New field for tracking vendor updates
     status = models.CharField(
@@ -179,23 +207,4 @@ class OrderItem(models.Model):
         return f"{self.product.title} x {self.quantity} ({self.get_status_display()})"
 
 
-
-class Store(models.Model):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name="store")
-    name = models.CharField(max_length=255)
-    description = models.TextField()
-    image = models.ImageField(upload_to="store_images/", blank=True, null=True)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    address = models.CharField(max_length=255, blank=True, null=True)
-    province = models.CharField(max_length=100, blank=True, null=True)
-    town = models.CharField(max_length=100, blank=True, null=True)
-    website = models.URLField(blank=True, null=True)
-    category = models.CharField(max_length=100, blank=True, null=True)
-
-    is_approved = models.BooleanField(default=False)  # ✅ new field
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
 

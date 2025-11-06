@@ -9,7 +9,7 @@ from django.contrib.auth import logout
 
 from .models import Userprofile
 from store.forms import ProductForm, StoreForm, OrderItemStatusForm
-from store.models import Products, Category, OrderItem, Order
+from store.models import Products, Category, OrderItem, Order, Store
 from django.http import HttpResponseForbidden
 # Create your views here.
 
@@ -116,11 +116,24 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from store.models import OrderItem, Products
 
+from django.db.models import Sum, Q
+from collections import defaultdict
+
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Sum, Q
+
 @login_required
 def mystore(request):
+    # Get the vendor's store
+    try:
+        store = Store.objects.get(owner=request.user)
+    except Store.DoesNotExist:
+        store = None
+
     # Products for this vendor
     products = request.user.products.exclude(status=Products.DELETED)
-    
+
     # All order items for this vendor
     order_items = OrderItem.objects.filter(
         product__user=request.user
@@ -136,7 +149,7 @@ def mystore(request):
 
     # Build summaries
     for order, items in orders_dict.items():
-        total_price = sum([item.get_total_price() for item in items])
+        total_price = sum(item.get_total_price() for item in items)
         order_summary = {
             'order': order,
             'items': items,
@@ -147,23 +160,115 @@ def mystore(request):
                 (item.status == OrderItem.STATUS_DELIVERED and item.received is True)
                 for item in items
             )
-
-
         }
 
-        # Split orders
         if order_summary['completed']:
             history_orders.append(order_summary)
         else:
             underway_orders.append(order_summary)
 
+    # --- Earnings Calculation ---
+    now = timezone.now()
+
+    # total earned (all confirmed or withdrawn)
+    total_earned = order_items.aggregate(total=Sum('price'))['total'] or 0
+
+    # pending: delivered but not yet confirmed received
+    pending_balance = order_items.filter(
+        Q(status=OrderItem.STATUS_DELIVERED, received=False)
+    ).aggregate(total=Sum('price'))['total'] or 0
+
+    # available: confirmed received more than 24 hours ago
+    available_balance = order_items.filter(
+        status=OrderItem.STATUS_DELIVERED,
+        received=True,
+        received_at__lte=now - timedelta(hours=24)
+    ).aggregate(total=Sum('price'))['total'] or 0
+
+    # --- Update Store Balances ---
+    if store:
+        store.total_earned = total_earned
+        store.pending_balance = pending_balance
+        store.available_balance = available_balance
+        store.save()
+
+    # --- Context ---
     context = {
         'products': products,
         'underway_orders': underway_orders,
         'history_orders': history_orders,
+        'store': store,
+        'total_earned': total_earned,
+        'pending_balance': pending_balance,
+        'available_balance': available_balance,
     }
 
     return render(request, 'userprofile/mystore.html', context)
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+
+@login_required
+def pending_earnings(request):
+    # Check if the user has a store
+    if hasattr(request.user, 'store'):
+        store = request.user.store
+        pending_orders = OrderItem.objects.filter(
+            vendor=store,
+            order__status='delivered',
+            is_paid_to_vendor=False
+        )
+        print(pending_orders)
+        total_pending = sum(item.price * item.quantity for item in pending_orders)
+    else:
+        # If the user has no store, show empty results
+        pending_orders = []
+        total_pending = 0
+
+    context = {
+        'pending_orders': pending_orders,
+        'total_pending': total_pending
+    }
+    return render(request, 'userprofile/pending_earnings.html', context)
+
+
+
+@login_required
+def available_balance(request):
+    balance = 0
+
+    if hasattr(request.user, 'store'):
+        store = request.user.store
+
+        # Only include items that are delivered and not yet paid to vendor
+        available_orders = OrderItem.objects.filter(
+            vendor=store,
+            status=OrderItem.STATUS_DELIVERED,
+            is_paid_to_vendor=False
+        )
+
+        # Calculate total withdrawable balance
+        balance = sum(item.price * item.quantity for item in available_orders)
+
+    context = {
+        'balance': balance,
+        'available_orders': available_orders if hasattr(request.user, 'store') else []
+    }
+
+    return render(request, 'userprofile/avalaible_balance.html', context)
+
+
+
+
+
+
+
+
+
+
+
 
 
 from .forms import UserProfileForm

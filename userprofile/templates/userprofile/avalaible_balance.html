@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Available Balance</h2>
+
+    <div class="card p-4 mb-4 shadow-sm">
+        <h4>Total Available: K{{ balance }}</h4>
+        <p>You can withdraw your balance below.</p>
+        <!-- Use a proper URL if you have a withdraw view -->
+        <a href="#" class="btn btn-primary">Withdraw</a>
+    </div>
+
+    <h5>Pending Orders</h5>
+    {% if pending_orders %}
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in pending_orders %}
+                <tr>
+                    <td>{{ item.product.title }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>K{{ item.price }}</td>
+                    <!-- Use simple multiplication without a custom filter -->
+                    <td>K{{ item.price|add:"0"|floatformat:2|floatformat:""|floatformat:""|add:"0"|add:item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No pending orders.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -56,6 +56,49 @@ My Store - {{ user.username }}
     </div>
 
 
+<<!-- Earnings Section -->
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+        Earnings Summary
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-2.21 0-4 .79-4 2v1c0 1.21 1.79 2 4 2s4-.79 4-2v-1c0-1.21-1.79-2-4-2zM8 14v1c0 1.21 1.79 2 4 2s4-.79 4-2v-1M4 6v12a2 2 0 002 2h12a2 2 0 002-2V6" />
+        </svg>
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-center">
+
+        <!-- Total Earned (clickable) -->
+        <a href="#"
+           class="p-4 border rounded-lg bg-teal-50 hover:bg-teal-100 transition duration-200 block">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase">Total Earned</h3>
+            <p class="text-2xl font-bold text-teal-700">K{{ total_earned|floatformat:2 }}</p>
+        </a>
+
+        <!-- Pending Balance (clickable) -->
+        <a href="{% url 'pending_earnings' %}"
+           class="p-4 border rounded-lg bg-yellow-50 hover:bg-yellow-100 transition duration-200 block">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase">Pending Balance</h3>
+            <p class="text-2xl font-bold text-yellow-700">K{{ pending_balance|floatformat:2 }}</p>
+        </a>
+
+        <!-- Available Balance (clickable) -->
+        <a href="{% url 'available_balance' %}"
+           class="p-4 border rounded-lg bg-green-50 hover:bg-green-100 transition duration-200 block">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase">Available Balance</h3>
+            <p class="text-2xl font-bold text-green-700">K{{ available_balance|floatformat:2 }}</p>
+        </a>
+
+    </div>
+</div>
+
+
+
+
+
+
+
+
 <!-- Orders Section -->
 <h2 class="text-2xl font-bold mb-4">Orders Underway</h2>
 
