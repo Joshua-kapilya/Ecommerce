@@ -41,6 +41,9 @@ def product_detail(request, product_id):
     reviews = product.reviews.all()
     avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
 
+    # 🟢 Get related products from the same category (excluding the current one)
+    related_products = Products.objects.filter(category=product.category, quantity__gt=0).exclude(id=product.id)[:4]
+
     # Handle review submission
     if request.method == 'POST':
         form = ReviewForm(request.POST)
@@ -67,7 +70,9 @@ def product_detail(request, product_id):
         'form': form,
         'reviews': reviews,
         'avg_rating': avg_rating,
+        'related_products': related_products,  # ✅ send related products to template
     })
+
 
 
 

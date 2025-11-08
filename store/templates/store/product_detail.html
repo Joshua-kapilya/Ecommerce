@@ -181,4 +181,40 @@
 
     </div>
 </div>
+
+
+<!-- Related Products Section -->
+<div class="max-w-6xl mx-auto mt-12 p-4 bg-white rounded-xl shadow-md">
+    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">Related Products</h2>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+        {% for related in related_products %}
+        <div class="bg-gray-50 rounded-lg shadow hover:shadow-lg transition overflow-hidden">
+            <a href="{% url 'product_detail' related.id %}">
+                {% if related.image %}
+                    <img src="{{ related.image.url }}" alt="{{ related.title }}"
+                         class="w-full h-48 object-cover rounded-t-lg">
+                {% else %}
+                    <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
+                        No Image
+                    </div>
+                {% endif %}
+                <div class="p-3">
+                    <h3 class="text-sm sm:text-base font-semibold text-gray-800 truncate">
+                        {{ related.title }}
+                    </h3>
+                    <p class="text-teal-600 font-bold text-sm sm:text-base">
+                        K{{ related.get_display_price }}
+                    </p>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-gray-500">No related products available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+
+
 {% endblock %}
