@@ -9,27 +9,17 @@
 <body class="bg-gradient-to-br from-blue-50 via-white to-purple-100 min-h-screen flex flex-col">
 
   <!-- Navbar -->
-  <nav class="w-full bg-teal-600 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center py-4">
-        
+  <nav class="w-full bg-teal-600 shadow-md fixed top-0 left-0 z-50">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-3 flex-wrap text-white">
+
         <!-- Logo -->
-        <div class="flex items-center flex-shrink-0">
-          <a href="/" class="text-white font-bold text-xl">Easy Access</a>
-        </div>
+        <a href="/" class="font-bold text-xl">Easy Access</a>
 
-        <!-- Hamburger Button (Mobile) -->
-        <div class="md:hidden">
-          <button id="menu-toggle" class="text-white focus:outline-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
+        <!-- Menu Items -->
+        <div class="flex flex-wrap items-center gap-4 sm:gap-6 justify-center text-white text-lg w-full sm:w-auto mt-2 sm:mt-0">
 
-        <!-- Desktop Menu -->
-        <div class="hidden md:flex items-center space-x-4 text-white">
+          <!-- Search -->
           <form method="get" action="{% url 'search' %}" class="flex items-center">
             <input
               type="search"
@@ -37,10 +27,7 @@
               placeholder="Search"
               class="rounded-l-md px-3 py-1 text-gray-800 focus:outline-none"
             />
-            <button
-              type="submit"
-              class="bg-teal-700 text-white px-3 py-1 rounded-r-md hover:bg-teal-800 transition"
-            >
+            <button type="submit" class="bg-teal-700 text-white px-3 py-1 rounded-r-md hover:bg-teal-800 transition">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
                 class="w-5 h-5">
@@ -51,19 +38,28 @@
             </button>
           </form>
 
+          <!-- About (Word) -->
           <a href="#" class="hover:underline">About</a>
 
           {% if request.user.is_authenticated %}
             {% if request.user.userprofile.is_vendor %}
-            <a href="{% url 'mystore' %}" class="py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">
-              My Store
+            <!-- My Store (Icon + Text) -->
+            <a href="{% url 'mystore' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                class="w-6 h-6 mb-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 3h18v4H3V3Zm0 6h18v12H3V9Z" />
+              </svg>
+              <span class="text-xs">My Store</span>
             </a>
             {% endif %}
 
-            <a href="{% url 'cart_view' %}" class="flex py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">
+            <!-- Cart (Icon + Text) -->
+            <a href="{% url 'cart_view' %}" class="flex flex-col items-center relative hover:text-gray-200 transition">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none"
                 viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                class="w-6 h-6 mr-1">
+                class="w-6 h-6 mb-1">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 
                      1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218
@@ -74,64 +70,40 @@
                      0Zm12.75 0a.75.75 0 1 1-1.5 0 
                      .75.75 0 0 1 1.5 0Z" />
               </svg>
-              ({{ cart|length }})
+              <span class="text-xs">Cart</span>
+              <span class="absolute -top-1 -right-2 bg-red-500 text-xs px-1 rounded-full">{{ cart|length }}</span>
             </a>
 
-            <a href="{% url 'myaccount' %}" class="py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">My Account</a>
+            <!-- My Account (Icon + Text) -->
+            <a href="{% url 'myaccount' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                class="w-6 h-6 mb-1">
+                <path stroke-linecap="round" stroke-linejoin="round" 
+                  d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 
+                     3.75 3.75 0 0 1 7.5 0Zm-3.75 9a8.25 8.25 0 0 0-6.364 3h12.728
+                     A8.25 8.25 0 0 0 12 16.5Z" />
+              </svg>
+              <span class="text-xs">Account</span>
+            </a>
+
+            <!-- Logout (Word) -->
             <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
+
           {% else %}
+            <!-- Login & Signup (Words) -->
             <a href="{% url 'login' %}" class="hover:underline">Login</a>
             <a href="{% url 'signup' %}" class="hover:underline">Sign up</a>
           {% endif %}
         </div>
       </div>
     </div>
-
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="md:hidden hidden px-4 pb-4 space-y-3 bg-teal-700 text-white">
-      <form method="get" action="{% url 'search' %}" class="flex items-center">
-        <input
-          type="search"
-          name="query"
-          placeholder="Search"
-          class="w-full rounded-l-md px-3 py-2 text-gray-800 focus:outline-none"
-        />
-        <button
-          type="submit"
-          class="bg-teal-800 text-white px-3 py-2 rounded-r-md hover:bg-teal-900 transition"
-        >
-          🔍
-        </button>
-      </form>
-
-      <a href="#" class="block hover:underline">About</a>
-      {% if request.user.is_authenticated %}
-        {% if request.user.userprofile.is_vendor %}
-        <a href="{% url 'mystore' %}" class="block py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">My Store</a>
-        {% endif %}
-        <a href="{% url 'cart_view' %}" class="block py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">(Cart: {{ cart|length }})</a>
-        <a href="{% url 'myaccount' %}" class="block py-2 px-4 bg-teal-800 rounded-xl hover:bg-teal-900 transition">My Account</a>
-        <a href="{% url 'logout' %}" class="block hover:underline">Logout</a>
-      {% else %}
-        <a href="{% url 'login' %}" class="block hover:underline">Login</a>
-        <a href="{% url 'signup' %}" class="block hover:underline">Sign up</a>
-      {% endif %}
-    </div>
   </nav>
 
   <!-- Main Content -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 py-24 w-full">
     {% block content %}
     {% endblock %}
   </main>
-
-  <!-- Script for menu toggle -->
-  <script>
-    const toggleBtn = document.getElementById('menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    toggleBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-    });
-  </script>
 </body>
 </html>

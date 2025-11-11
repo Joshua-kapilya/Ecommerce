@@ -123,23 +123,31 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Sum, Q
 
+from django.db.models import Sum, Q
+from django.utils import timezone
+from collections import defaultdict
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from datetime import timedelta
+
+
 @login_required
 def mystore(request):
-    # Get the vendor's store
+    # --- Get the vendor's store ---
     try:
         store = Store.objects.get(owner=request.user)
     except Store.DoesNotExist:
         store = None
 
-    # Products for this vendor
+    # --- Products for this vendor ---
     products = request.user.products.exclude(status=Products.DELETED)
 
-    # All order items for this vendor
+    # --- All order items belonging to this vendor ---
     order_items = OrderItem.objects.filter(
         product__user=request.user
     ).select_related('order', 'order__created_by', 'product')
 
-    # Group items by order
+    # --- Group items by order ---
     orders_dict = defaultdict(list)
     for item in order_items:
         orders_dict[item.order].append(item)
@@ -147,7 +155,7 @@ def mystore(request):
     underway_orders = []
     history_orders = []
 
-    # Build summaries
+    # --- Build summaries for display ---
     for order, items in orders_dict.items():
         total_price = sum(item.get_total_price() for item in items)
         order_summary = {
@@ -157,9 +165,9 @@ def mystore(request):
             'total_price': total_price,
             'customer': order.created_by,
             'completed': all(
-                (item.status == OrderItem.STATUS_DELIVERED and item.received is True)
+                item.status == OrderItem.STATUS_DELIVERED and item.received
                 for item in items
-            )
+            ),
         }
 
         if order_summary['completed']:
@@ -170,29 +178,29 @@ def mystore(request):
     # --- Earnings Calculation ---
     now = timezone.now()
 
-    # total earned (all confirmed or withdrawn)
+    # Total earned (all items that belong to this vendor)
     total_earned = order_items.aggregate(total=Sum('price'))['total'] or 0
 
-    # pending: delivered but not yet confirmed received
+    # Pending balance (delivered but not yet marked as received)
     pending_balance = order_items.filter(
-        Q(status=OrderItem.STATUS_DELIVERED, received=False)
+        status=OrderItem.STATUS_DELIVERED,
+        received=False
     ).aggregate(total=Sum('price'))['total'] or 0
 
-    # available: confirmed received more than 24 hours ago
+    # Available balance (received = True, no time delay)
     available_balance = order_items.filter(
         status=OrderItem.STATUS_DELIVERED,
-        received=True,
-        received_at__lte=now - timedelta(hours=24)
+        received=True
     ).aggregate(total=Sum('price'))['total'] or 0
 
-    # --- Update Store Balances ---
+    # --- Update Store Balances (and save to DB) ---
     if store:
         store.total_earned = total_earned
         store.pending_balance = pending_balance
         store.available_balance = available_balance
-        store.save()
+        store.save(update_fields=['total_earned', 'pending_balance', 'available_balance'])
 
-    # --- Context ---
+    # --- Pass values to template ---
     context = {
         'products': products,
         'underway_orders': underway_orders,
