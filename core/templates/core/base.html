@@ -7,98 +7,106 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-white to-purple-100 min-h-screen flex flex-col">
+<!-- Navbar -->
+<nav class="w-full bg-teal-600 shadow-md fixed top-0 left-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex flex-wrap items-center justify-between py-3 text-white">
 
-  <!-- Navbar -->
-  <nav class="w-full bg-teal-600 shadow-md fixed top-0 left-0 z-50">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center py-3 flex-wrap text-white">
+      <!-- Logo -->
+      <a href="/" class="font-bold text-2xl tracking-wide flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 11c0-3.866-3.134-7-7-7v14c3.866 0 7-3.134 7-7z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 11c0 3.866 3.134 7 7 7V4c-3.866 0-7 3.134-7 7z" />
+        </svg>
+        Easy Access
+      </a>
 
-        <!-- Logo -->
-        <a href="/" class="font-bold text-xl">Easy Access</a>
+      <!-- Menu Items -->
+      <div class="w-full sm:w-auto flex flex-wrap justify-center sm:justify-end items-center gap-4 sm:gap-6 mt-3 sm:mt-0 text-sm sm:text-base">
 
-        <!-- Menu Items -->
-        <div class="flex flex-wrap items-center gap-4 sm:gap-6 justify-center text-white text-lg w-full sm:w-auto mt-2 sm:mt-0">
+        <!-- Search -->
+        <form method="get" action="{% url 'search' %}" class="flex items-center bg-white rounded-lg overflow-hidden shadow-sm">
+          <input
+            type="search"
+            name="query"
+            placeholder="Search..."
+            class="px-3 py-1 text-gray-800 focus:outline-none w-32 sm:w-44 text-sm"
+          />
+          <button type="submit" class="bg-teal-700 text-white px-3 py-1 hover:bg-teal-800 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+              class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 
+                   5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          </button>
+        </form>
 
-          <!-- Search -->
-          <form method="get" action="{% url 'search' %}" class="flex items-center">
-            <input
-              type="search"
-              name="query"
-              placeholder="Search"
-              class="rounded-l-md px-3 py-1 text-gray-800 focus:outline-none"
-            />
-            <button type="submit" class="bg-teal-700 text-white px-3 py-1 rounded-r-md hover:bg-teal-800 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 
-                     5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-              </svg>
-            </button>
-          </form>
+        <!-- About -->
+        <a href="#" class="hover:text-gray-200 font-medium">About</a>
 
-          <!-- About (Word) -->
-          <a href="#" class="hover:underline">About</a>
-
-          {% if request.user.is_authenticated %}
-            {% if request.user.userprofile.is_vendor %}
-            <!-- My Store (Icon + Text) -->
-            <a href="{% url 'mystore' %}" class="flex flex-col items-center hover:text-gray-200 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
-                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                class="w-6 h-6 mb-1">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M3 3h18v4H3V3Zm0 6h18v12H3V9Z" />
-              </svg>
-              <span class="text-xs">My Store</span>
-            </a>
-            {% endif %}
-
-            <!-- Cart (Icon + Text) -->
-            <a href="{% url 'cart_view' %}" class="flex flex-col items-center relative hover:text-gray-200 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                class="w-6 h-6 mb-1">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 
-                     1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218
-                     c1.121-2.3 2.1-4.684 2.924-7.138a60.114 
-                     60.114 0 0 0-16.536-1.84M7.5 
-                     14.25 5.106 5.272M6 20.25a.75.75 0 
-                     1 1-1.5 0 .75.75 0 0 1 1.5 
-                     0Zm12.75 0a.75.75 0 1 1-1.5 0 
-                     .75.75 0 0 1 1.5 0Z" />
-              </svg>
-              <span class="text-xs">Cart</span>
-              <span class="absolute -top-1 -right-2 bg-red-500 text-xs px-1 rounded-full">{{ cart|length }}</span>
-            </a>
-
-            <!-- My Account (Icon + Text) -->
-            <a href="{% url 'myaccount' %}" class="flex flex-col items-center hover:text-gray-200 transition">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
-                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
-                class="w-6 h-6 mb-1">
-                <path stroke-linecap="round" stroke-linejoin="round" 
-                  d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 
-                     3.75 3.75 0 0 1 7.5 0Zm-3.75 9a8.25 8.25 0 0 0-6.364 3h12.728
-                     A8.25 8.25 0 0 0 12 16.5Z" />
-              </svg>
-              <span class="text-xs">Account</span>
-            </a>
-
-            <!-- Logout (Word) -->
-            <a href="{% url 'logout' %}" class="hover:underline">Logout</a>
-
-          {% else %}
-            <!-- Login & Signup (Words) -->
-            <a href="{% url 'login' %}" class="hover:underline">Login</a>
-            <a href="{% url 'signup' %}" class="hover:underline">Sign up</a>
+        {% if request.user.is_authenticated %}
+          {% if request.user.userprofile.is_vendor %}
+          <!-- My Store -->
+          <a href="{% url 'mystore' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+              class="w-6 h-6 mb-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 3h18v4H3V3Zm0 6h18v12H3V9Z" />
+            </svg>
+            <span class="text-xs font-medium">My Store</span>
+          </a>
           {% endif %}
-        </div>
+
+          <!-- Cart -->
+          <a href="{% url 'cart_view' %}" class="flex flex-col items-center relative hover:text-gray-200 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+              class="w-6 h-6 mb-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 
+                   1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218
+                   c1.121-2.3 2.1-4.684 2.924-7.138a60.114 
+                   60.114 0 0 0-16.536-1.84M7.5 
+                   14.25 5.106 5.272M6 20.25a.75.75 0 
+                   1 1-1.5 0 .75.75 0 0 1 1.5 
+                   0Zm12.75 0a.75.75 0 1 1-1.5 0 
+                   .75.75 0 0 1 1.5 0Z" />
+            </svg>
+            <span class="text-xs font-medium">Cart</span>
+            <span class="absolute -top-1 -right-2 bg-red-500 text-xs px-1 rounded-full">{{ cart|length }}</span>
+          </a>
+
+          <!-- Account -->
+          <a href="{% url 'myaccount' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+              class="w-6 h-6 mb-1">
+              <path stroke-linecap="round" stroke-linejoin="round" 
+                d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 
+                   3.75 3.75 0 0 1 7.5 0Zm-3.75 9a8.25 8.25 0 0 0-6.364 3h12.728
+                   A8.25 8.25 0 0 0 12 16.5Z" />
+            </svg>
+            <span class="text-xs font-medium">Account</span>
+          </a>
+
+          <!-- Logout -->
+          <a href="{% url 'logout' %}" class="hover:text-gray-200 font-medium">Logout</a>
+
+        {% else %}
+          <!-- Login & Signup -->
+          <a href="{% url 'login' %}" class="hover:text-gray-200 font-medium">Login</a>
+          <a href="{% url 'signup' %}" class="hover:text-gray-200 font-medium">Sign Up</a>
+        {% endif %}
       </div>
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <!-- Main Content -->
   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 py-24 w-full">
