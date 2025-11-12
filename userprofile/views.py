@@ -243,32 +243,41 @@ def pending_earnings(request):
 
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from store.models import OrderItem
+from django.db.models import F, Sum, DecimalField
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from store.models import Store
+
 @login_required
 def available_balance(request):
     balance = 0
+    available_orders = []
 
+    # Check if the logged-in user has a store (vendor account)
     if hasattr(request.user, 'store'):
         store = request.user.store
 
-        # Only include items that are delivered and not yet paid to vendor
+        # ✅ Use the balance stored in the database
+        balance = store.available_balance
+
+        # Optionally, still show the list of unpaid orders (for reference)
+        from store.models import OrderItem
         available_orders = OrderItem.objects.filter(
             vendor=store,
             status=OrderItem.STATUS_DELIVERED,
             is_paid_to_vendor=False
         )
 
-        # Calculate total withdrawable balance
-        balance = sum(item.price * item.quantity for item in available_orders)
-
     context = {
         'balance': balance,
-        'available_orders': available_orders if hasattr(request.user, 'store') else []
+        'available_orders': available_orders
     }
 
     return render(request, 'userprofile/avalaible_balance.html', context)
-
-
-
 
 
 
