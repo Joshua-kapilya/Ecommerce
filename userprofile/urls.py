@@ -18,5 +18,7 @@ urlpatterns = [
 	path('edit-profile/', views.edit_profile, name='edit_profile'),
 	path('completed-orders/', views.completed_orders, name='completed_orders'),
 	path('pending-earnings/', views.pending_earnings, name='pending_earnings'),
-	path('available-balance/', views.available_balance, name='available_balance')
+	path('available-balance/', views.available_balance, name='available_balance'),
+	path("withdraw/", views.withdraw_funds, name="withdraw_funds"),
+
 ]

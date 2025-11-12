@@ -280,6 +280,56 @@ def available_balance(request):
     return render(request, 'userprofile/avalaible_balance.html', context)
 
 
+import requests
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
+from decimal import Decimal
+
+@login_required
+def withdraw_funds(request):
+    if not hasattr(request.user, 'store'):
+        messages.error(request, "You don't have a store account.")
+        return redirect("available_balance")
+
+    store = request.user.store
+    amount = store.available_balance
+
+    if amount <= 0:
+        messages.warning(request, "You have no available funds to withdraw.")
+        return redirect("available_balance")
+
+    url = "https://api.flutterwave.com/v3/transfers"
+    headers = {
+        "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "account_bank": "MPS",
+        "account_number": store.phone_number or "260XXXXXXXXX",
+        "amount": str(amount),
+        "narration": f"Withdrawal for {store.name}",
+        "currency": "ZMW",
+        "reference": f"wd-{store.id}-{int(amount)}",
+        "debit_currency": "ZMW",
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+    print("=== FLW RESPONSE ===")
+    print(response.text)  # 👈 This will print Flutterwave’s API result to your terminal
+    print("====================")
+
+    result = response.json()
+
+    if result.get("status") == "success":
+        store.available_balance = 0
+        store.save(update_fields=["available_balance"])
+        messages.success(request, f"Withdrawal of K{amount} sent successfully!")
+    else:
+        messages.error(request, f"Withdrawal failed: {result.get('message', 'Unknown error')}")
+
+    return redirect("available_balance")
+
 
 
 
