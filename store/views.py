@@ -185,7 +185,7 @@ def checkout(request):
         "Content-Type": "application/json",
     }
 
-    response = requests.post("https://api.flutterwave.com/v3/payments", json=payload, headers=headers)
+    response = requests.post("https://ravesandboxapi.flutterwave.com/v3/payments", json=payload, headers=headers)
     data = response.json()
 
     print("FLUTTERWAVE RESPONSE:", data)
