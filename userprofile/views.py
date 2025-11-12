@@ -129,6 +129,9 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from datetime import timedelta
+import uuid
+
+
 
 
 @login_required
@@ -304,6 +307,20 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 import requests
 import logging
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+import requests
+import logging
+import uuid
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+import requests
+import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -327,29 +344,32 @@ def withdraw_funds(request):
         messages.warning(request, "You have no available funds to withdraw.")
         return redirect("available_balance")
 
-    # Ensure phone number is present
+    # Ensure phone number is present (for mobile money)
     if not getattr(store, 'phone_number', None):
         logger.warning("Mobile number missing for store")
         messages.error(request, "Mobile number is missing.")
         return redirect("available_balance")
 
     logger.info("All checks passed, preparing Flutterwave request")
+
     url = "https://api.flutterwave.com/v3/transfers"
     headers = {
         "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
         "Content-Type": "application/json",
     }
 
-    # Convert Decimal to float for JSON serialization
+    # Generate unique reference to avoid “duplicate ref” errors
+    reference = f"wd-{store.id}-{int(amount)}-{uuid.uuid4().hex[:8]}"
+
     data = {
-        "account_bank": "MPS",  # Replace with correct mobile money provider code
-        "account_number": store.phone_number,  # Mobile money number
-        "amount": float(amount),  # Convert Decimal to float
+        "account_bank": "MPS",                      # Mobile Money provider code for ZMW transfers
+        "account_number": store.phone_number,       # Mobile money number
+        "amount": float(amount),                    # Convert Decimal to float
         "currency": "ZMW",
         "debit_currency": "ZMW",
         "narration": f"Withdrawal for {store.name}",
-        "reference": f"wd-{store.id}-{int(amount)}",
-        "full_name": store.name,  # Using store name as beneficiary
+        "reference": reference,
+        "beneficiary_name": store.name,             # Use store name (changed key from full_name to beneficiary_name)
         "meta": [{"MobileNumber": store.phone_number}],
     }
 
@@ -373,11 +393,14 @@ def withdraw_funds(request):
         messages.success(request, f"Withdrawal of K{amount} sent successfully!")
         logger.info("Withdrawal successful, balance updated")
     else:
-        msg = result.get("message") or result.get("data", {}).get("complete_message", "Unknown error")
+        logger.warning(f"Full response: {result}")
+        msg = result.get("message") or result.get("data", {}).get("complete_message") or "Unknown error"
         messages.error(request, f"Withdrawal failed: {msg}")
         logger.warning(f"Withdrawal failed: {msg}")
 
     return redirect("available_balance")
+
+
 
 
 
