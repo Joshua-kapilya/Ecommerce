@@ -286,49 +286,99 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from decimal import Decimal
 
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+import requests
+
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+import requests
+import logging
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def withdraw_funds(request):
-    if not hasattr(request.user, 'store'):
+    logger.info(f"Withdrawal requested by user {request.user.id}")
+
+    # Check if user has a store
+    store = getattr(request.user, 'store', None)
+    if not store:
+        logger.warning("User has no store")
         messages.error(request, "You don't have a store account.")
         return redirect("available_balance")
 
-    store = request.user.store
+    logger.info(f"Store found: {store.name}, available balance: {store.available_balance}")
     amount = store.available_balance
 
+    # Check if there are funds to withdraw
     if amount <= 0:
+        logger.warning("No funds to withdraw")
         messages.warning(request, "You have no available funds to withdraw.")
         return redirect("available_balance")
 
+    # Ensure phone number is present
+    if not getattr(store, 'phone_number', None):
+        logger.warning("Mobile number missing for store")
+        messages.error(request, "Mobile number is missing.")
+        return redirect("available_balance")
+
+    logger.info("All checks passed, preparing Flutterwave request")
     url = "https://api.flutterwave.com/v3/transfers"
     headers = {
         "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
         "Content-Type": "application/json",
     }
+
+    # Convert Decimal to float for JSON serialization
     data = {
-        "account_bank": "MPS",
-        "account_number": store.phone_number or "260XXXXXXXXX",
-        "amount": str(amount),
-        "narration": f"Withdrawal for {store.name}",
+        "account_bank": "MPS",  # Replace with correct mobile money provider code
+        "account_number": store.phone_number,  # Mobile money number
+        "amount": float(amount),  # Convert Decimal to float
         "currency": "ZMW",
-        "reference": f"wd-{store.id}-{int(amount)}",
         "debit_currency": "ZMW",
+        "narration": f"Withdrawal for {store.name}",
+        "reference": f"wd-{store.id}-{int(amount)}",
+        "full_name": store.name,  # Using store name as beneficiary
+        "meta": [{"MobileNumber": store.phone_number}],
     }
 
-    response = requests.post(url, json=data, headers=headers)
-    print("=== FLW RESPONSE ===")
-    print(response.text)  # 👈 This will print Flutterwave’s API result to your terminal
-    print("====================")
+    logger.info(f"Flutterwave request data: {data}")
 
-    result = response.json()
+    try:
+        response = requests.post(url, json=data, headers=headers, timeout=30)
+        logger.info("Flutterwave API called")
+        logger.info(f"Response status code: {response.status_code}")
+        logger.info(f"Response text: {response.text}")
+        result = response.json()
+    except Exception as e:
+        logger.error(f"Error calling Flutterwave API: {str(e)}")
+        messages.error(request, f"Withdrawal failed: {str(e)}")
+        return redirect("available_balance")
 
+    # Handle response
     if result.get("status") == "success":
         store.available_balance = 0
         store.save(update_fields=["available_balance"])
         messages.success(request, f"Withdrawal of K{amount} sent successfully!")
+        logger.info("Withdrawal successful, balance updated")
     else:
-        messages.error(request, f"Withdrawal failed: {result.get('message', 'Unknown error')}")
+        msg = result.get("message") or result.get("data", {}).get("complete_message", "Unknown error")
+        messages.error(request, f"Withdrawal failed: {msg}")
+        logger.warning(f"Withdrawal failed: {msg}")
 
     return redirect("available_balance")
+
 
 
 
