@@ -129,7 +129,6 @@ import requests
 def checkout(request):
     cart = Cart(request)
 
-    # ✅ Only allow checkout if there are items
     if len(cart) == 0:
         return render(request, 'store/checkout.html', {
             'cart': cart,
@@ -141,13 +140,11 @@ def checkout(request):
         product = item['product']
         total_price += product.price * int(item['quantity'])
 
-    # ✅ Automatically create order (no form)
     order = Order.objects.create(
         created_by=request.user,
         paid_amount=total_price
     )
 
-    # ✅ Create order items
     for item in cart:
         product = item['product']
         quantity = int(item['quantity'])
@@ -160,17 +157,15 @@ def checkout(request):
             quantity=quantity
         )
 
-    # ✅ Flutterwave Payment Payload (email optional)
     payload = {
         "tx_ref": f"TX-{order.id}",
         "amount": str(total_price),
         "currency": "ZMW",
         "redirect_url": request.build_absolute_uri('/payment/callback/'),
         "customer": {
-            # ✅ Use placeholder email since your users don't have one
             "email": "noemail@easyaccess.com",
             "name": request.user.username,
-            "phonenumber": "260977000000"  # optional static or user field
+            "phonenumber": "260977000000"
         },
         "payment_options": "mobilemoneyzambia",
         "customizations": {
@@ -190,9 +185,8 @@ def checkout(request):
 
     print("FLUTTERWAVE RESPONSE:", data)
 
-    # ✅ If payment link generated successfully
     if data.get('status') == 'success' and data['data'].get('link'):
-        cart.clear()
+        # ✅ Do NOT clear the cart here
         return redirect(data['data']['link'])
     else:
         return render(request, 'store/checkout.html', {
@@ -201,18 +195,55 @@ def checkout(request):
         })
 
 
+
+import requests
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from .cart import Cart
+from .models import Order
+
 @login_required
 def payment_callback(request):
     status = request.GET.get('status')
     tx_ref = request.GET.get('tx_ref')
+    transaction_id = request.GET.get('transaction_id')
 
-    if status == 'successful':
-        # You can verify payment here if needed
-        messages.success(request, "Payment successful!")
-    else:
-        messages.error(request, "Payment failed or cancelled.")
+    # ❌ If user cancelled or payment failed
+    if status != 'successful':
+        messages.error(request, "Payment failed or was cancelled.")
+        return redirect('cart_view')
 
-    return redirect('myaccount')
+    # ✅ Verify payment with Flutterwave API
+    verify_url = f"https://ravesandboxapi.flutterwave.com/v3/transactions/{transaction_id}/verify"
+    headers = {
+        "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
+    }
+
+    response = requests.get(verify_url, headers=headers)
+    data = response.json()
+
+    if data.get('status') == 'success' and data['data']['status'] == 'successful':
+        tx_ref_value = data['data']['tx_ref']
+        order_id = tx_ref_value.replace("TX-", "")
+
+        # ✅ Update the order as paid
+        order = Order.objects.filter(id=order_id).first()
+        if order:
+            order.is_paid = True
+            order.save()
+
+        # ✅ Now clear the cart (only when payment success is confirmed)
+        cart = Cart(request)
+        cart.clear()
+
+        messages.success(request, "Payment successful! Your order has been placed.")
+        return redirect('myaccount')
+
+    # ❌ If verification failed
+    messages.error(request, "Payment verification failed. Please contact support.")
+    return redirect('cart_view')
 
 
 
