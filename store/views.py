@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from .forms import ReviewForm
 from django.db import models
+import uuid
 
 
 from .cart import Cart
@@ -92,7 +93,7 @@ def get_total_cost(self):
 	for p in self.cart.keys():
 		self.cart[str(p)]['product'] = Product.objects.get(pk=p)
 
-	return int(sum(item['product'].price * item['quantity'] for item in self.cart.values())) / 100
+	return int(sum(item['product'].price * item['quantity'] for item in self.cart.values()))
 
 def clear(self):
 	del self.session[settings.CART_SESSION_ID]
@@ -140,25 +141,12 @@ def checkout(request):
         product = item['product']
         total_price += product.price * int(item['quantity'])
 
-    order = Order.objects.create(
-        created_by=request.user,
-        paid_amount=total_price
-    )
-
-    for item in cart:
-        product = item['product']
-        quantity = int(item['quantity'])
-        price = product.price * quantity
-
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            price=price,
-            quantity=quantity
-        )
+    # IMPORTANT FIX: Do NOT create order yet.
+    # Only generate a ref for Flutterwave
+    tx_ref = f"TX-{uuid.uuid4().hex[:10]}"
 
     payload = {
-        "tx_ref": f"TX-{order.id}",
+        "tx_ref": tx_ref,
         "amount": str(total_price),
         "currency": "ZMW",
         "redirect_url": request.build_absolute_uri('/payment/callback/'),
@@ -170,7 +158,7 @@ def checkout(request):
         "payment_options": "mobilemoneyzambia",
         "customizations": {
             "title": "Easy Access Payment",
-            "description": f"Payment for Order #{order.id}",
+            "description": f"Payment for Cart",
             "logo": "https://your-domain.com/static/images/logo.png"
         }
     }
@@ -180,19 +168,23 @@ def checkout(request):
         "Content-Type": "application/json",
     }
 
-    response = requests.post("https://ravesandboxapi.flutterwave.com/v3/payments", json=payload, headers=headers)
+    response = requests.post("https://ravesandboxapi.flutterwave.com/v3/payments",
+                             json=payload, headers=headers)
     data = response.json()
 
     print("FLUTTERWAVE RESPONSE:", data)
 
     if data.get('status') == 'success' and data['data'].get('link'):
-        # ✅ Do NOT clear the cart here
+        # Redirect user to Flutterwave
+        # Store tx_ref in session so we can connect it later
+        request.session['tx_ref'] = tx_ref
         return redirect(data['data']['link'])
     else:
         return render(request, 'store/checkout.html', {
             'cart': cart,
             'error': 'Payment initialization failed. Please try again later.'
         })
+
 
 
 
@@ -203,19 +195,17 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 from .cart import Cart
 from .models import Order
-
 @login_required
 def payment_callback(request):
     status = request.GET.get('status')
-    tx_ref = request.GET.get('tx_ref')
+    tx_ref = request.session.get('tx_ref')
     transaction_id = request.GET.get('transaction_id')
 
-    # ❌ If user cancelled or payment failed
     if status != 'successful':
         messages.error(request, "Payment failed or was cancelled.")
         return redirect('cart_view')
 
-    # ✅ Verify payment with Flutterwave API
+    # Verify with Flutterwave
     verify_url = f"https://ravesandboxapi.flutterwave.com/v3/transactions/{transaction_id}/verify"
     headers = {
         "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
@@ -225,40 +215,61 @@ def payment_callback(request):
     data = response.json()
 
     if data.get('status') == 'success' and data['data']['status'] == 'successful':
-        tx_ref_value = data['data']['tx_ref']
-        order_id = tx_ref_value.replace("TX-", "")
-
-        # ✅ Update the order as paid
-        order = Order.objects.filter(id=order_id).first()
-        if order:
-            order.is_paid = True
-            order.save()
-
-        # ✅ Now clear the cart (only when payment success is confirmed)
         cart = Cart(request)
+
+        # FINAL FIX: Create order NOW only after successful payment
+        total_price = 0
+        for item in cart:
+            product = item['product']
+            total_price += product.price * int(item['quantity'])
+
+        order = Order.objects.create(
+            created_by=request.user,
+            paid_amount=total_price,
+            is_paid=True
+        )
+
+        for item in cart:
+            product = item['product']
+            quantity = int(item['quantity'])
+            price = product.price * quantity
+
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                price=price,
+                quantity=quantity
+            )
+
+        # Clear cart only after success
         cart.clear()
+        request.session.pop('tx_ref', None)
 
         messages.success(request, "Payment successful! Your order has been placed.")
         return redirect('myaccount')
 
-    # ❌ If verification failed
     messages.error(request, "Payment verification failed. Please contact support.")
     return redirect('cart_view')
-
-
 
 
 from django.db.models import Q, F
 from django.db.models.functions import Sqrt, Power
 
+from django.db.models import Q, F
+from django.db.models.functions import Sqrt, Power
+from django.shortcuts import render
+
 def search(request):
     query = request.GET.get('query', '')
+
     products = Products.objects.filter(
-        Q(title__icontains=query) | Q(description__icontains=query),
+        Q(title__icontains=query) |
+        Q(description__icontains=query) |
+        Q(category__title__icontains=query),
         status=Products.ACTIVE
     )
 
-    # Annotate distance if user has a location
+    # Distance sorting (only if user has location)
     user = request.user
     if user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.latitude:
         user_lat = user.userprofile.latitude
@@ -269,9 +280,14 @@ def search(request):
                 Power(F('latitude') - user_lat, 2) +
                 Power(F('longitude') - user_lon, 2)
             )
-        ).order_by('distance')  # Closest products first
+        ).order_by('distance')
 
-    return render(request, 'store/search.html', {'products': products, 'query': query})
+    return render(request, 'store/search.html', {
+        'products': products,
+        'query': query
+    })
+
+
 
 
 

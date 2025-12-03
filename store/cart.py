@@ -13,12 +13,13 @@ class Cart(object):
         self.cart = cart
 
     def __iter__(self):
-        for p in self.cart.keys():
-            self.cart[str(p)]['product'] = Products.objects.get(pk=p)
+        for p, item in self.cart.items():
+            product = Products.objects.get(pk=p)
+            item_copy = item.copy()
+            item_copy['product'] = product
+            item_copy['total_price'] = (product.price * item['quantity']) / 100
+            yield item_copy   # THIS MUST BE HERE
 
-        for item in self.cart.values():
-            item['total_price'] = int(item['product'].price * item['quantity']) / 100
-            yield item
 
     def __len__(self):
         return sum(item['quantity'] for item in self.cart.values())
@@ -50,7 +51,7 @@ class Cart(object):
         for p in self.cart.keys():
             self.cart[str(p)]['product'] = Products.objects.get(pk=p)
 
-        return int(sum(item['product'].price * item['quantity'] for item in self.cart.values())) / 100
+        return int(sum(item['product'].price * item['quantity'] for item in self.cart.values()))
 
     def clear(self):   # ✅ added method
         self.session[settings.CART_SESSION_ID] = {}

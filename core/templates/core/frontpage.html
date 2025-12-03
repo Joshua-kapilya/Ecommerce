@@ -23,6 +23,56 @@
             <button id="prev" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow">&#10094;</button>
             <button id="next" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow">&#10095;</button>
         </div>
+<!-- Categories -->
+{% if categories %}
+<h2 class="text-2xl font-semibold mb-4 text-gray-800">Categories</h2>
+
+<div id="category-slider"
+     class="flex gap-4 overflow-x-auto pb-4 no-scrollbar mb-10 scroll-smooth">
+    
+    {% for category in categories %}
+    <a href="{% url 'category_detail' category.id %}"
+       class="min-w-[140px] bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.03] transition-transform duration-300 flex-shrink-0">
+        
+        {% if category.image %}
+        <img src="{{ category.image.url }}" 
+             alt="{{ category.title }}" 
+             class="w-full h-28 object-cover rounded-t-lg">
+        {% else %}
+        <div class="w-full h-28 bg-gray-200 rounded-t-lg flex items-center justify-center text-gray-500">
+            No Image
+        </div>
+        {% endif %}
+        
+        <div class="p-2 text-center">
+            <h3 class="text-sm font-semibold text-gray-700 truncate">{{ category.title }}</h3>
+        </div>
+
+    </a>
+    {% endfor %}
+</div>
+
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<script>
+    const slider = document.getElementById('category-slider');
+
+    function autoScroll() {
+        slider.scrollLeft += 1;  // speed
+        if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth) {
+            slider.scrollLeft = 0; // restart smoothly
+        }
+    }
+
+    setInterval(autoScroll, 20); // adjust speed here (lower = faster)
+</script>
+
+{% endif %}
+
+
 
         {% if user.is_authenticated and not user.is_vendor %}
         <div class="mb-6 text-center">

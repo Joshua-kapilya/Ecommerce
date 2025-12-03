@@ -1,0 +1,39 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ category.title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+
+    <h1 class="text-3xl font-bold mb-6">{{ category.title }}</h1>
+
+    {% if category.image %}
+<img src="{{ category.image.url }}"
+     class="mx-auto w-40 h-40 object-cover rounded-full shadow mb-6">
+{% endif %}
+
+
+    <h2 class="text-2xl font-semibold mb-4">Products</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+        <a href="{% url 'product_detail' product.id %}"
+           class="bg-white rounded-lg shadow hover:shadow-xl hover:scale-[1.02] transition duration-300">
+            
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="w-full h-48 object-cover rounded-t-lg">
+            {% endif %}
+            
+            <div class="p-4">
+                <h3 class="text-lg font-semibold truncate">{{ product.title }}</h3>
+                <p class="text-sm text-gray-600 mt-2">K{{ product.get_display_price }}</p>
+            </div>
+
+        </a>
+        {% empty %}
+        <p class="text-gray-500">No products available in this category.</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

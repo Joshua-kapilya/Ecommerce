@@ -4,9 +4,17 @@ from django.db.models import F
 from django.db.models.functions import Sqrt, Power
 from django.shortcuts import render
 
+from store.models import Category, Products
+from django.shortcuts import get_object_or_404
+
+
+
+
+
 
 def frontpage(request):
     # Base query for active products
+    categories = Category.objects.all()
     base_products = Products.objects.filter(status=Products.ACTIVE)
 
     # Function to annotate distance if user has location
@@ -49,6 +57,19 @@ def frontpage(request):
         'trending_products': trending_products,
         'recommended_products': recommended_products,  # empty for now
         'carousel_images': carousel_images,
+        'categories': categories,
     }
 
     return render(request, 'core/frontpage.html', context)
+
+
+def category_detail(request, id):
+    category = get_object_or_404(Category, id=id)
+    products = Products.objects.filter(category=category)
+
+    return render(request, 'core/category_detail.html', {
+        'category': category,
+        'products': products,
+    })
+
+

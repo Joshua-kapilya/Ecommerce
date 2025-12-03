@@ -147,3 +147,18 @@ GOOGLE_MAPS_API_KEY = "ad5a3c779a4e2cc8ccf4dbc6376a7543d126b7a1389cd448d5870edb8
 FLW_PUBLIC_KEY = "FLWPUBK_TEST-6dfaa9920a75b0b1de0f2a4a4bdca915-X"
 FLW_SECRET_KEY = "FLWSECK_TEST-3dedd513507f69e4144b4fc8b45f7605-X"
 FLW_ENCRYPTION_KEY = "FLWSECK_TESTb7870e1fbf61"
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',  # Make sure INFO and above are printed
+    },
+}

@@ -134,6 +134,12 @@ import uuid
 
 
 
+from collections import defaultdict
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Sum
+from store.models import Store, Products, OrderItem
+
 @login_required
 def mystore(request):
     # --- Get the vendor's store ---
@@ -190,18 +196,14 @@ def mystore(request):
         received=False
     ).aggregate(total=Sum('price'))['total'] or 0
 
-    # Available balance (received = True, no time delay)
-    available_balance = order_items.filter(
-        status=OrderItem.STATUS_DELIVERED,
-        received=True
-    ).aggregate(total=Sum('price'))['total'] or 0
+    # Available balance is fetched from DB, NOT recalculated here
+    db_available_balance = store.available_balance if store else 0
 
-    # --- Update Store Balances (and save to DB) ---
+    # --- Update Store Balances (save only total_earned and pending_balance) ---
     if store:
         store.total_earned = total_earned
         store.pending_balance = pending_balance
-        store.available_balance = available_balance
-        store.save(update_fields=['total_earned', 'pending_balance', 'available_balance'])
+        store.save(update_fields=['total_earned', 'pending_balance'])
 
     # --- Pass values to template ---
     context = {
@@ -211,11 +213,10 @@ def mystore(request):
         'store': store,
         'total_earned': total_earned,
         'pending_balance': pending_balance,
-        'available_balance': available_balance,
+        'available_balance': db_available_balance,  # Safe DB value
     }
 
     return render(request, 'userprofile/mystore.html', context)
-
 
 
 from django.contrib.auth.decorators import login_required
@@ -224,8 +225,9 @@ from django.shortcuts import render
 @login_required
 def pending_earnings(request):
     # Check if the user has a store
-    if hasattr(request.user, 'store'):
-        store = request.user.store
+    if hasattr(request.user, 'store'): 
+        store = Store.objects.get(owner=request.user)  # always fresh
+
         pending_orders = OrderItem.objects.filter(
             vendor=store,
             order__status='delivered',
@@ -255,25 +257,31 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from store.models import Store
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from store.models import Store, OrderItem
+
 @login_required
 def available_balance(request):
     balance = 0
     available_orders = []
 
-    # Check if the logged-in user has a store (vendor account)
-    if hasattr(request.user, 'store'):
-        store = request.user.store
+    try:
+        # Fetch the store fresh from the DB
+        store = Store.objects.get(owner=request.user)
 
-        # ✅ Use the balance stored in the database
+        # Use fresh balance
         balance = store.available_balance
 
-        # Optionally, still show the list of unpaid orders (for reference)
-        from store.models import OrderItem
+        # Optionally show unpaid orders
         available_orders = OrderItem.objects.filter(
             vendor=store,
             status=OrderItem.STATUS_DELIVERED,
             is_paid_to_vendor=False
         )
+
+    except Store.DoesNotExist:
+        store = None
 
     context = {
         'balance': balance,
@@ -281,7 +289,6 @@ def available_balance(request):
     }
 
     return render(request, 'userprofile/avalaible_balance.html', context)
-
 
 import requests
 from django.conf import settings
@@ -322,83 +329,100 @@ import requests
 import logging
 import uuid
 
+import logging
+import uuid
+import requests
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+from store.models import Store
+
+import uuid
+import logging
+import requests
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.shortcuts import redirect
+from store.models import Store
+
 logger = logging.getLogger(__name__)
 
 @login_required
 def withdraw_funds(request):
-    logger.info(f"Withdrawal requested by user {request.user.id}")
-
-    # Check if user has a store
-    store = getattr(request.user, 'store', None)
-    if not store:
-        logger.warning("User has no store")
-        messages.error(request, "You don't have a store account.")
-        return redirect("available_balance")
-
-    logger.info(f"Store found: {store.name}, available balance: {store.available_balance}")
-    amount = store.available_balance
-
-    # Check if there are funds to withdraw
-    if amount <= 0:
-        logger.warning("No funds to withdraw")
-        messages.warning(request, "You have no available funds to withdraw.")
-        return redirect("available_balance")
-
-    # Ensure phone number is present (for mobile money)
-    if not getattr(store, 'phone_number', None):
-        logger.warning("Mobile number missing for store")
-        messages.error(request, "Mobile number is missing.")
-        return redirect("available_balance")
-
-    logger.info("All checks passed, preparing Flutterwave request")
-
-    url = "https://api.flutterwave.com/v3/transfers"
-    headers = {
-        "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    # Generate unique reference to avoid “duplicate ref” errors
-    reference = f"wd-{store.id}-{int(amount)}-{uuid.uuid4().hex[:8]}"
-
-    data = {
-        "account_bank": "MPS",                      # Mobile Money provider code for ZMW transfers
-        "account_number": store.phone_number,       # Mobile money number
-        "amount": float(amount),                    # Convert Decimal to float
-        "currency": "ZMW",
-        "debit_currency": "ZMW",
-        "narration": f"Withdrawal for {store.name}",
-        "reference": reference,
-        "beneficiary_name": store.name,             # Use store name (changed key from full_name to beneficiary_name)
-        "meta": [{"MobileNumber": store.phone_number}],
-    }
-
-    logger.info(f"Flutterwave request data: {data}")
+    logger.info(f"[WITHDRAW] Withdrawal requested by user {request.user.id}")
 
     try:
-        response = requests.post(url, json=data, headers=headers, timeout=30)
-        logger.info("Flutterwave API called")
-        logger.info(f"Response status code: {response.status_code}")
-        logger.info(f"Response text: {response.text}")
-        result = response.json()
-    except Exception as e:
-        logger.error(f"Error calling Flutterwave API: {str(e)}")
-        messages.error(request, f"Withdrawal failed: {str(e)}")
-        return redirect("available_balance")
+        # Ensure fresh store fetch inside atomic transaction
+        with transaction.atomic():
+            store = Store.objects.select_for_update().get(owner=request.user)
+            logger.info(f"[WITHDRAW] Store found: {store.name}, available balance: {store.available_balance}")
 
-    # Handle response
-    if result.get("status") == "success":
-        store.available_balance = 0
-        store.save(update_fields=["available_balance"])
-        messages.success(request, f"Withdrawal of K{amount} sent successfully!")
-        logger.info("Withdrawal successful, balance updated")
-    else:
-        logger.warning(f"Full response: {result}")
-        msg = result.get("message") or result.get("data", {}).get("complete_message") or "Unknown error"
-        messages.error(request, f"Withdrawal failed: {msg}")
-        logger.warning(f"Withdrawal failed: {msg}")
+            amount = store.available_balance
+            if amount <= 0:
+                logger.warning("[WITHDRAW] No funds to withdraw")
+                messages.warning(request, "You have no available funds to withdraw.")
+                return redirect("available_balance")
+
+            if not store.phone_number:
+                logger.warning("[WITHDRAW] Mobile number missing for store")
+                messages.error(request, "Mobile number is missing.")
+                return redirect("available_balance")
+
+            logger.info("[WITHDRAW] Preparing Flutterwave transfer request")
+            reference = f"wd-{store.id}-{int(amount)}-{uuid.uuid4().hex[:8]}"
+            data = {
+                "account_bank": "MPS",
+                "account_number": store.phone_number,
+                "amount": float(amount),
+                "currency": "ZMW",
+                "debit_currency": "ZMW",
+                "narration": f"Withdrawal for {store.name}",
+                "reference": reference,
+                "beneficiary_name": store.name,
+                "meta": [{"MobileNumber": store.phone_number}],
+            }
+
+            logger.info(f"[WITHDRAW] Flutterwave request payload: {data}")
+
+            response = requests.post(
+                "https://api.flutterwave.com/v3/transfers",
+                json=data,
+                headers={
+                    "Authorization": f"Bearer {settings.FLW_SECRET_KEY}",
+                    "Content-Type": "application/json"
+                },
+                timeout=30
+            )
+
+            logger.info(f"[WITHDRAW] Flutterwave API called, status code: {response.status_code}")
+            logger.info(f"[WITHDRAW] Raw response: {response.text}")
+            result = response.json()
+            logger.info(f"[WITHDRAW] Parsed JSON response: {result}")
+
+            if result.get("status") == "success":
+                # Update balance and save immediately
+                store.available_balance = 0
+                store.save(update_fields=["available_balance"])
+                messages.success(request, f"Withdrawal of K{amount} sent successfully!")
+                logger.info(f"[WITHDRAW] Flutterwave transfer successful, balance updated to {store.available_balance}")
+            else:
+                msg = result.get("message") or result.get("data", {}).get("complete_message") or "Unknown error"
+                messages.error(request, f"Withdrawal failed: {msg}")
+                logger.warning(f"[WITHDRAW] Withdrawal failed: {msg}")
+
+    except Store.DoesNotExist:
+        logger.error("[WITHDRAW] Store not found for user")
+        messages.error(request, "You don't have a store account.")
+    except Exception as e:
+        logger.error(f"[WITHDRAW] Exception occurred: {str(e)}")
+        messages.error(request, f"Withdrawal failed: {str(e)}")
 
     return redirect("available_balance")
+
+
 
 
 

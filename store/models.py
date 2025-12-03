@@ -36,6 +36,7 @@ class Store(models.Model):
 class Category(models.Model):
 	title = models.CharField(max_length=50)
 	slug = models.SlugField(max_length=50)
+	image = models.ImageField(upload_to='uploads/product_images/', blank=True, null=True)
 
 
 	class Meta:
@@ -88,7 +89,8 @@ class Products(models.Model):
 
 
 	def get_display_price(self):
-		return self.price / 100
+		return self.price
+
 
 
 	def get_thumbnail(self):
