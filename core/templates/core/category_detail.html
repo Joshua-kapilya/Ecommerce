@@ -3,15 +3,16 @@
 {% block title %}{{ category.title }}{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-6 pt-24"> <!-- Added pt-24 to prevent overlap with navbar -->
 
-    <h1 class="text-3xl font-bold mb-6">{{ category.title }}</h1>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 break-words">
+        {{ category.title }}
+    </h1>
 
     {% if category.image %}
-<img src="{{ category.image.url }}"
-     class="mx-auto w-40 h-40 object-cover rounded-full shadow mb-6">
-{% endif %}
-
+    <img src="{{ category.image.url }}"
+         class="mx-auto w-24 h-24 sm:w-40 sm:h-40 object-cover rounded-full shadow mb-6">
+    {% endif %}
 
     <h2 class="text-2xl font-semibold mb-4">Products</h2>
 
