@@ -9,9 +9,11 @@
 <body class="bg-gradient-to-br from-blue-50 via-white to-purple-100 min-h-screen flex flex-col">
 
   <!-- Navbar -->
+  <!-- LEAVE EVERYTHING HERE - do not remove -->
   <nav class="w-full bg-teal-600 shadow-md fixed top-0 left-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <div class="flex flex-wrap items-center justify-between py-3 text-white">
+
         <!-- Logo -->
         <a href="/" class="font-bold text-2xl tracking-wide flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -23,24 +25,85 @@
           Easy Access
         </a>
 
-        <!-- Menu Items -->
+        <!-- Menu Items (always visible) -->
         <div class="flex flex-wrap items-center gap-4 text-sm sm:text-base">
+
           <!-- Search -->
           <form method="get" action="{% url 'search' %}" class="flex items-center bg-white rounded-lg overflow-hidden shadow-sm w-full sm:w-auto">
-            <input type="search" name="query" placeholder="Search..."
-                   class="px-3 py-1 text-gray-800 focus:outline-none w-full sm:w-44 text-sm" />
+            <input
+              type="search"
+              name="query"
+              placeholder="Search..."
+              class="px-3 py-1 text-gray-800 focus:outline-none w-full sm:w-44 text-sm"
+            />
             <button type="submit" class="bg-teal-700 text-white px-3 py-1 hover:bg-teal-800 transition">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                   viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                   class="w-5 h-5">
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                class="w-5 h-5">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 
-                         5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 
+                     5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
             </button>
           </form>
 
-          {% comment %} Keep your existing navbar links (Login, Signup, Account, Cart) {% endcomment %}
+          <!-- About -->
+          <a href="#" class="hover:text-gray-200 font-medium">About</a>
+
+          {% if request.user.is_authenticated %}
+            {% if request.user.userprofile.is_vendor %}
+            <!-- My Store -->
+            <a href="{% url 'mystore' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                class="w-6 h-6 mb-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M3 3h18v4H3V3Zm0 6h18v12H3V9Z" />
+              </svg>
+              <span class="text-xs font-medium">My Store</span>
+            </a>
+            {% endif %}
+
+            <!-- Cart -->
+            <a href="{% url 'cart_view' %}" class="flex flex-col items-center relative hover:text-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                class="w-6 h-6 mb-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 
+                     1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218
+                     c1.121-2.3 2.1-4.684 2.924-7.138a60.114 
+                     60.114 0 0 0-16.536-1.84M7.5 
+                     14.25 5.106 5.272M6 20.25a.75.75 0 
+                     1 1-1.5 0 .75.75 0 0 1 1.5 
+                     0Zm12.75 0a.75.75 0 1 1-1.5 0 
+                     .75.75 0 0 1 1.5 0Z" />
+              </svg>
+              <span class="text-xs font-medium">Cart</span>
+              <span class="absolute -top-1 -right-2 bg-red-500 text-xs px-1 rounded-full">{{ cart|length }}</span>
+            </a>
+
+            <!-- Account -->
+            <a href="{% url 'myaccount' %}" class="flex flex-col items-center hover:text-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
+                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" 
+                class="w-6 h-6 mb-1">
+                <path stroke-linecap="round" stroke-linejoin="round" 
+                  d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 
+                     3.75 3.75 0 0 1 7.5 0Zm-3.75 9a8.25 8.25 0 0 0-6.364 3h12.728
+                     A8.25 8.25 0 0 0 12 16.5Z" />
+              </svg>
+              <span class="text-xs font-medium">Account</span>
+            </a>
+
+            <!-- Logout -->
+            <a href="{% url 'logout' %}" class="hover:text-gray-200 font-medium">Logout</a>
+
+          {% else %}
+            <!-- Login & Signup -->
+            <a href="{% url 'login' %}" class="hover:text-gray-200 font-medium">Login</a>
+            <a href="{% url 'signup' %}" class="hover:text-gray-200 font-medium">Sign Up</a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -53,7 +116,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white mt-12 flex-shrink-0">
+  <footer class="bg-gray-900 text-white mt-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
 
       <!-- Contact -->
@@ -69,7 +132,7 @@
       <!-- Quick Links -->
       <div>
         <h3 class="text-lg font-bold mb-4">Quick Links</h3>
-        <ul class="space-y-2">
+        <ul>
           <li><a href="/" class="hover:text-gray-300">Home</a></li>
           <li><a href="#" class="hover:text-gray-300">About Us</a></li>
           <li><a href="{% url 'cart_view' %}" class="hover:text-gray-300">Cart</a></li>
@@ -81,7 +144,7 @@
       <!-- Policies -->
       <div>
         <h3 class="text-lg font-bold mb-4">Policies</h3>
-        <ul class="space-y-2">
+        <ul>
           <li><a href="#" class="hover:text-gray-300">Privacy Policy</a></li>
           <li><a href="#" class="hover:text-gray-300">Terms & Conditions</a></li>
           <li><a href="#" class="hover:text-gray-300">Return / Refund Policy</a></li>
@@ -115,7 +178,8 @@
     <div class="border-t border-gray-700 mt-8 pt-4 text-center text-sm text-gray-400">
       &copy; {{ now.year }} Easy Access. All rights reserved. <br>
       Designed with ❤️ by Easy Access Team. <br>
-      <span>Website version 1.0 | Support: support@easyaccess.com</span>
+      <a href="#" class="underline hover:text-gray-300">Report an issue</a> | 
+      <a href="#" class="underline hover:text-gray-300">Contact Support</a>
     </div>
   </footer>
 
